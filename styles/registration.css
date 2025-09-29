@@ -21,8 +21,16 @@
     display: inline-block;
 }
 
+.reg-main-right-img{
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
 .reg-login-form{
     text-align: center;
+    margin-top: 20vh;
+    width: 50%;
 }
 
 .reg-main-label{
@@ -31,17 +39,57 @@
     font-size: 40px;
     line-height: 22px;
     color: black;
+    display: block;
 }
 
 .reg-input{
+    display: block;
     background-color: #E3E3E3;
     font-family: 'Montserrat';
     font-weight: 500;
     font-size: 32px;
     line-height: 22px;
-    width:  673px;
-    height: 86px;
+    width: calc(100% - 44px);
     border-radius: 16px;
     border: 1px solid #E3E3E3;
-    padding: 22px 32px;
+    padding: 32px 22px;
+    margin-top: 35px;
+}
+
+.reg-submit-btn{
+    display: block;
+    background-color: #EBC76B;
+    font-family: 'Montserrat';
+    font-weight: 600;
+    font-size: 40px;
+    line-height: 22px;
+    width: 100%;
+    border-radius: 16px;
+    border: 1px solid #E3E3E3;
+    padding: 32px 22px;
+    margin-top: 50px;
+}
+
+.reg-additional-text{
+    display: block;
+    font-family: 'Montserrat';
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 22px;
+}
+.reg-redirect{
+    color: black;
+}
+
+.reg-main-back-element{
+    width: 15vw;
+    height: 15vw;
+    background-color: #EBC76B;
+    border: #EBC76B 1px solid;
+    border-radius: 56px;
+    position: absolute;
+    top: -8vw;
+    left: -2vw;
+    z-index: 99;
+    transform: rotate(26.32deg);
 }
