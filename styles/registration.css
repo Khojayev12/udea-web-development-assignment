@@ -23,7 +23,10 @@
 }
 
 .reg-main-right-img{
-    width:fit-content;
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width:30%;
     height: 100%;
     overflow: hidden;
 }
@@ -70,7 +73,11 @@
     padding: 32px 22px;
     margin-top: 50px;
 }
-
+.reg-submit-btn:hover{
+    background-color: #ffb700;
+    transform: scale(1.05);
+    transition: 0.3s;
+}
 .reg-additional-text{
     display: block;
     font-family: 'Montserrat';

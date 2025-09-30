@@ -38,6 +38,9 @@ body {
     margin-right: 40px;
 }
 
+.header-nav-a:hover{
+    color: #EBC76B;
+}
 .home-main{
     width: 100%;
     height: calc(100vh - 100px);
@@ -92,4 +95,77 @@ body {
     left: 10%;
     z-index: 12;
     border-radius: 16px;
+}
+
+.main-hero-add-btn:hover{
+    background-color: #ffb700;
+    transform: scale(1.05);
+    transition: 0.3s;
+}
+
+.populars-section{
+    width: 90%;
+    margin-left: 5%;
+    margin-top: 100px;
+    display: inline-flex;
+    justify-content: space-between;
+}
+
+.populars-sec-left{
+    position: relative;
+    width: 50%;
+    display: inline-block;
+}
+
+.populars-left-title{
+    color: black;
+    font-family: 'Montserrat';
+    font-size: 73px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.populars-left-seeall{
+    color: #EBC76B;
+    font-family: 'Montserrat';
+    font-size: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 15px;
+    text-align: left;
+}
+
+.populars-middle-line{
+    width: 1px;
+    background-color: black;
+    position: absolute;
+    height: calc(80% + 40px);
+    top: 10%;
+    right: 0px;
+}
+
+.populars-sec-right{
+    width: 48%;
+    display: inline-block;
+}
+
+.populars-sec-right-item{
+    display: flex;
+    margin-top: 20px;
+    justify-content: space-between;
+}
+.populars-right-item-img{
+    width: 257px;
+    height: 157px;
+    display: inline-block;
+}
+
+.populars-sec-right-title{
+    display: inline-block;
+    color: black;
+    font-family: 'Montserrat';
+    font-size: 33px;
+    font-weight: 600;
+    text-align: left;
+    margin-left: 20px;
 }
