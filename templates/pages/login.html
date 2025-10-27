@@ -5,26 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="/styles/index.css">
-    <link rel="stylesheet" href="/styles/registration.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/registration.css') }}">
 </head>
 
 <body>
     <div class="reg-main-page">
         <div class="reg-main-left">
-            <form action="login" class="reg-login-form">
+            <form action="{{ url_for('login') }}" class="reg-login-form" method="post">
                 <label for="form" class="reg-main-label">LOGIN</label>
                 <input type="email" placeholder="Email" class="reg-input">
                 <input type="password" placeholder="Password" class="reg-input">
                 <button class="reg-submit-btn">LOGIN</button>
                 <p class="reg-additional-text">
-                    <a href="/pages/signup.html" class="reg-redirect">Sign Up</a> if you do not have account.
+            <a href="{{ url_for('signup') }}" class="reg-redirect">Sign Up</a> if you do not have account.
                 </p>
                 
             </form>
         </div>
         <div class="reg-main-right">
-            <img src="/media/registration.png" alt="login image" class="reg-main-right-img">
+            <img src="{{ url_for('static', filename='media/registration.png') }}" alt="login image" class="reg-main-right-img">
         </div>
     </div>
     <div class="reg-main-back-element" ></div>

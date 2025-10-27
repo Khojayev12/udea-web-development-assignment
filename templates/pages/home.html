@@ -1,0 +1,110 @@
+{% extends 'layout.html' %}
+
+{% block body%}
+    {% set registration_image = url_for('static', filename='media/registration.png') %}
+
+    <div class="home-main">
+      <img
+        src="{{ url_for('static', filename='media/main-hero.png') }}"
+        alt="home main background"
+        class="home-main-hero-bg"
+      />
+      <input
+        type="search"
+        class="main-hero-search"
+        placeholder="search for recipies..."
+      />
+      <button class="main-hero-add-btn">ADD RECIPE</button>
+    </div>
+    <div class="list-section-1">
+      <h2 class="list-section-title">WHAT WE ARE CRAVING</h2>
+      <div class="list-section-1-item-group">
+        <div class="list-section-1-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
+          <p class="list-item-name">Chicken Pasta</p>
+        </div>
+
+        <div class="list-section-1-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
+          <p class="list-item-name">Chicken Pasta</p>
+        </div>
+
+        <div class="list-section-1-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
+          <p class="list-item-name">Chicken Pasta</p>
+        </div>
+
+        <div class="list-section-1-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
+          <p class="list-item-name">Chicken Pasta</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-section-1">
+      <h2 class="list-section-title">MORE RECIPES</h2>
+      <div class="list-section-1-item-group">
+        <div class="retsept-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
+          <p class="retsept-list-name">Chicken Pasta</p>
+        </div>
+        <div class="retsept-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
+          <p class="retsept-list-name">Chicken Pasta</p>
+        </div>
+        <div class="retsept-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
+          <p class="retsept-list-name">Chicken Pasta</p>
+        </div>
+        <div class="retsept-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
+          <p class="retsept-list-name">Chicken Pasta</p>
+        </div>
+        <div class="retsept-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
+          <p class="retsept-list-name">Chicken Pasta</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="list-section-1">
+      <h2 class="list-section-title">COLLECTIONS</h2>
+      <div class="list-section-1-item-group">
+        <div class="collection-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
+          <p class="collection-list-name">Chicken Pasta</p>
+        </div>
+        <div class="collection-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
+          <p class="collection-list-name">Chicken Pasta</p>
+        </div>
+        <div class="collection-list-item">
+          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
+          <p class="collection-list-name">Chicken Pasta</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="populars-section">
+        <div class="populars-sec-left">
+            <p class="populars-left-title">The Most Popular Recipes on CookBook Right Now</p>
+            <a class="populars-left-seeall">View Complete Guide > </a>
+            <div class="populars-middle-line"></div>
+        </div>
+        <div class="populars-sec-right">
+            <a class="populars-sec-right-item">
+                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
+                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
+            </a>
+            <a class="populars-sec-right-item">
+                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
+                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
+            </a>
+            <a class="populars-sec-right-item">
+                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
+                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
+            </a>
+        </div>
+    </div>
+
+{% endblock %}
