@@ -70,3 +70,73 @@
     left: 6%;
     bottom: -10vw;
 }
+
+@media (max-width: 1024px) {
+    .footer-main{
+        width: 90%;
+        margin: 40px auto 0;
+        padding: 80px 8% 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        align-items: flex-start;
+    }
+
+    .footer-title{
+        font-size: 44px;
+    }
+
+    .footer-description{
+        font-size: 30px;
+    }
+
+    .footer-right-title{
+        font-size: 30px;
+    }
+
+    .footer-social-name{
+        font-size: 28px;
+    }
+
+    .footer-left,
+    .footer-right{
+        width: 100%;
+    }
+
+    .footer-right-title{
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .footer-title{
+        font-size: 32px;
+    }
+
+    .footer-description{
+        font-size: 22px;
+    }
+
+    .footer-right-title{
+        font-size: 24px;
+    }
+
+    .footer-social-logo{
+        width: 48px;
+        height: 48px;
+    }
+
+    .footer-social-name{
+        font-size: 22px;
+    }
+
+    .footer-img{
+        width: 100%;
+        left: 0;
+    }
+
+    .footer-list-item{
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
