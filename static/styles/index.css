@@ -172,7 +172,7 @@ body {
   .list-section-title {
     width: 100%;
     text-align: center;
-    font-size: 32px;
+    font-size: 34px;
   }
 
   .list-section-1-item {
@@ -183,6 +183,9 @@ body {
 
   .list-item-img {
     height: auto;
+  }
+  .list-item-name {
+    font-size: 24px;
   }
 
   .retsept-list-item {
@@ -196,22 +199,35 @@ body {
     height: 200px;
     border-radius: 100px;
   }
+  .retsept-list-name {
+    font-size: 24px;
+  }
 
   .collection-list-item {
     width: 100%;
     height: 320px;
   }
+
+  .collection-list-name{
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 520px) {
   .list-section-title {
-    font-size: 26px;
+    font-size: 30px;
   }
 
   .retsept-list-img {
     width: 70vw;
     height: 70vw;
     border-radius: 35vw;
+  }
+
+  .list-item-name,
+  .retsept-list-name,
+  .collection-list-name{
+    font-size: 22px;
   }
 }
 

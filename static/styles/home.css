@@ -58,7 +58,8 @@ body {
 
 .home-main {
     width: 100%;
-    height: calc(100vh - 100px);
+    height: 70vh;
+    min-height: 400px;
     margin-top: 100px;
     position: relative;
     overflow: hidden;
@@ -78,38 +79,40 @@ body {
 .main-hero-search {
     position: absolute;
     z-index: 2;
-    top: 50px;
-    width: 50%;
-    margin-left: 25%;
-    height: 58px;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(70%, 720px);
+    min-height: 68px;
     border: 1px solid rgba(255, 255, 255, 0.85);
     border-radius: 40px;
-    padding: 32px 22px;
-    background-color: rgba(255, 255, 255, 0.2);
+    padding: 20px 32px;
+    background-color: rgba(255, 255, 255, 0.24);
+    backdrop-filter: blur(4px);
     color: white;
     font-family: 'Montserrat';
-    font-size: 23px;
+    font-size: 24px;
     font-weight: 500;
-    line-height: 22px;
+    line-height: 28px;
 }
 
 .main-hero-search::placeholder {
     color: white;
     font-family: 'Montserrat';
-    font-size: 23px;
+    font-size: 24px;
     font-weight: 500;
-    line-height: 22px;
+    line-height: 28px;
 }
 
 .main-hero-add-btn {
     color: black;
     font-family: 'Montserrat';
     font-size: 23px;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 22px;
     border: #EBC76B 1px solid;
     background-color: #EBC76B;
-    padding: 20px 36px;
+    padding: 22px 40px;
     position: absolute;
     bottom: 8%;
     left: 6%;
@@ -128,14 +131,19 @@ body {
     width: 90%;
     margin-left: 5%;
     margin-top: 100px;
-    display: inline-flex;
+    display: flex;
     justify-content: space-between;
+    align-items: stretch;
+    gap: 48px;
 }
 
 .populars-sec-left {
     position: relative;
     width: 50%;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
 }
 
 .populars-left-title {
@@ -169,13 +177,16 @@ body {
 
 .populars-sec-right {
     width: 48%;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
 }
 
 .populars-sec-right-item {
     display: flex;
-    margin-top: 20px;
-    justify-content: space-between;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
     text-decoration: none;
 }
 
@@ -195,7 +206,7 @@ body {
     font-size: 33px;
     font-weight: 600;
     text-align: left;
-    margin-left: 20px;
+    margin-left: 0;
 }
 
 @media (max-width: 1200px) {
@@ -210,27 +221,31 @@ body {
 
 @media (max-width: 1024px) {
     .header-nav {
-        font-size: 26px;
+        font-size: 28px;
         margin-top: 28px;
-        gap: 24px;
+        gap: 28px;
+    }
+
+    .home-main {
+        min-height: 440px;
     }
 
     .main-hero-search {
-        width: 70%;
-        margin-left: 15%;
-        top: 70px;
-        font-size: 20px;
+        width: min(78%, 640px);
+        font-size: 22px;
+        line-height: 26px;
     }
 
     .main-hero-search::placeholder {
-        font-size: 20px;
+        font-size: 22px;
+        line-height: 26px;
     }
 
     .main-hero-add-btn {
         bottom: 10%;
         left: 8%;
-        font-size: 20px;
-        padding: 18px 32px;
+        font-size: 21px;
+        padding: 20px 34px;
     }
 
     .populars-section {
@@ -239,6 +254,7 @@ body {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
+        gap: 32px;
     }
 
     .populars-sec-left,
@@ -261,6 +277,13 @@ body {
 
     .populars-sec-right-title {
         margin-left: 0;
+        font-size: 26px;
+    }
+
+    .populars-sec-left {
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 12px;
     }
 }
 
@@ -282,8 +305,8 @@ body {
 
     .header-nav {
         margin: 12px 0 0;
-        gap: 16px;
-        font-size: 22px;
+        gap: 20px;
+        font-size: 24px;
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
@@ -293,39 +316,40 @@ body {
     .home-main {
         margin-top: 0;
         height: auto;
-        min-height: 380px;
+        min-height: 400px;
     }
 
     .main-hero-search {
-        width: 80%;
-        margin-left: 10%;
-        top: 40px;
-        padding: 16px 20px;
-        height: auto;
-        font-size: 18px;
+        width: 82%;
+        max-width: 520px;
+        padding: 18px 22px;
+        font-size: 20px;
+        line-height: 24px;
     }
 
     .main-hero-search::placeholder {
-        font-size: 18px;
+        font-size: 20px;
+        line-height: 24px;
     }
 
     .main-hero-add-btn {
         left: 24px;
         bottom: 24px;
-        font-size: 18px;
-        padding: 16px 24px;
+        font-size: 20px;
+        padding: 18px 26px;
     }
 
     .populars-left-title {
-        font-size: 42px;
+        font-size: 46px;
     }
 
     .populars-left-seeall {
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .populars-sec-right-item {
         flex-direction: column;
+        gap: 16px;
     }
 
     .populars-right-item-img {
@@ -334,32 +358,33 @@ body {
     }
 
     .populars-sec-right-title {
-        font-size: 22px;
+        font-size: 24px;
     }
 }
 
 @media (max-width: 540px) {
     .header-nav {
-        font-size: 20px;
-        gap: 12px;
+        font-size: 22px;
+        gap: 16px;
         justify-content: center;
     }
 
     .main-hero-search {
-        width: 86%;
-        margin-left: 7%;
-        font-size: 16px;
+        width: 88%;
+        font-size: 18px;
+        line-height: 24px;
     }
 
     .main-hero-search::placeholder {
-        font-size: 16px;
+        font-size: 18px;
+        line-height: 24px;
     }
 
     .main-hero-add-btn {
         left: 16px;
         bottom: 16px;
-        font-size: 16px;
-        padding: 14px 20px;
+        font-size: 18px;
+        padding: 16px 22px;
     }
 
     .populars-section {
@@ -367,10 +392,10 @@ body {
     }
 
     .populars-left-title {
-        font-size: 34px;
+        font-size: 38px;
     }
 
     .populars-sec-right-title {
-        font-size: 20px;
+        font-size: 22px;
     }
 }

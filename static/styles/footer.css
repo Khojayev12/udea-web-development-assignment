@@ -1,14 +1,16 @@
 .footer-main{
-    margin: 0px;
-    width: 90%;
+    margin: 50px 0 0;
+    width: 100%;
     position: relative;
-    margin-top: 50px;
     background-color: #ECECEC;
     padding: 100px 5%;
     padding-bottom: 250px;
-    display: inline-flex;
+    display: flex;
     justify-content: space-between;
+    align-items: flex-start;
+    gap: 48px;
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .footer-left{
@@ -73,8 +75,8 @@
 
 @media (max-width: 1024px) {
     .footer-main{
-        width: 90%;
-        margin: 40px auto 0;
+        width: 100%;
+        margin: 40px 0 0;
         padding: 80px 8% 220px;
         display: flex;
         flex-direction: column;
@@ -83,19 +85,19 @@
     }
 
     .footer-title{
-        font-size: 44px;
+        font-size: 46px;
     }
 
     .footer-description{
-        font-size: 30px;
+        font-size: 34px;
     }
 
     .footer-right-title{
-        font-size: 30px;
+        font-size: 32px;
     }
 
     .footer-social-name{
-        font-size: 28px;
+        font-size: 30px;
     }
 
     .footer-left,
@@ -110,15 +112,15 @@
 
 @media (max-width: 560px) {
     .footer-title{
-        font-size: 32px;
+        font-size: 34px;
     }
 
     .footer-description{
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .footer-right-title{
-        font-size: 24px;
+        font-size: 26px;
     }
 
     .footer-social-logo{
@@ -127,7 +129,7 @@
     }
 
     .footer-social-name{
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .footer-img{
