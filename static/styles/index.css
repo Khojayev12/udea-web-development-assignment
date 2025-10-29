@@ -67,10 +67,10 @@ body {
 }
 
 .retsept-list-img {
-  width: 200px;
-  height: 200px;
+  width: 12vw;
+  height: 12vw;
   border: none;
-  border-radius: 100px;
+  border-radius: 6vw;
   margin: 0px;
 }
 
