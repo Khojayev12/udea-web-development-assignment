@@ -219,7 +219,7 @@ body {
     }
 }
 
-@media (max-width: 1024px) {
+@media screen and (max-width: 1024px) and  (min-width: 540px) {
     .header-nav {
         margin-top: 28px;
         gap: 28px;
@@ -335,23 +335,3 @@ body {
     }
 }
 
-@media (max-width: 540px) {
-    .header-nav {
-        gap: 16px;
-        justify-content: center;
-    }
-
-    .main-hero-search {
-        width: 88%;
-    }
-
-    .main-hero-add-btn {
-        left: 16px;
-        bottom: 16px;
-        padding: 16px 22px;
-    }
-
-    .populars-section {
-        margin-top: 60px;
-    }
-}
