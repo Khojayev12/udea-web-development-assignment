@@ -20,7 +20,7 @@
 .footer-title{
     color: black;
     font-family: 'Montserrat';
-    font-size: 52px;
+    font-size: clamp(34px, 4.5vw, 52px);
     font-weight: 700;
     text-align: left;
 }
@@ -28,7 +28,7 @@
     margin-top: 20px;
     color: black;
     font-family: 'Montserrat';
-    font-size: 38px;
+    font-size: clamp(20px, 3.5vw, 38px);
     font-weight: 500;
     text-align: left;
 }
@@ -42,7 +42,7 @@
     margin-top: 70px;
     color: black;
     font-family: 'Montserrat';
-    font-size: 36px;
+    font-size: clamp(24px, 3.3vw, 36px);
     font-weight: 500;
 }
 
@@ -62,7 +62,7 @@
     display: inline-block;
     color: black;
     font-family: 'Montserrat';
-    font-size: 32px;
+    font-size: clamp(20px, 3vw, 32px);
     font-weight: 500;
 }
 
@@ -84,22 +84,6 @@
         align-items: flex-start;
     }
 
-    .footer-title{
-        font-size: 46px;
-    }
-
-    .footer-description{
-        font-size: 34px;
-    }
-
-    .footer-right-title{
-        font-size: 32px;
-    }
-
-    .footer-social-name{
-        font-size: 30px;
-    }
-
     .footer-left,
     .footer-right{
         width: 100%;
@@ -111,25 +95,9 @@
 }
 
 @media (max-width: 560px) {
-    .footer-title{
-        font-size: 34px;
-    }
-
-    .footer-description{
-        font-size: 24px;
-    }
-
-    .footer-right-title{
-        font-size: 26px;
-    }
-
     .footer-social-logo{
         width: 48px;
         height: 48px;
-    }
-
-    .footer-social-name{
-        font-size: 24px;
     }
 
     .footer-img{
