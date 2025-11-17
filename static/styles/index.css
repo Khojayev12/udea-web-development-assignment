@@ -4,6 +4,19 @@ body {
   margin: 0px;
   padding: 0px;
 }
+.footer-social-logo{
+  width: 30px;
+  height: 30px;
+  object-position: center;
+  object-fit:fill;
+  margin-right: 5px;
+}
+
+.footer-list-item{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .header-main {
     width: 100%;
