@@ -28,7 +28,8 @@
     right: 0px;
     width:30%;
     height: 100%;
-    overflow: hidden;
+    object-fit: cover;
+    object-position: center;
 }
 
 .reg-login-form{
@@ -100,4 +101,47 @@
     left: -2vw;
     z-index: 99;
     transform: rotate(26.32deg);
+}
+
+
+@media (max-width: 1024px) {
+  .reg-main-right{
+    display: none;
+  }
+  .reg-main-left{
+    width: 100%;
+  }
+  .reg-login-form{
+    width: 70%;
+}
+  .reg-input{
+    font-size: 25px;
+    padding: 18px 22px;
+    margin-top: 35px;
+}
+}
+
+
+@media (max-width: 540px) {
+    .reg-login-form{
+        width: 80%;
+    }
+    .reg-input{
+        font-size: 18px;
+        padding: 18px 22px;
+        margin-top: 25px;
+    }
+    .reg-submit-btn{
+        display: block;
+        background-color: #EBC76B;
+        font-family: 'Montserrat';
+        font-weight: 600;
+        font-size: 30px;
+        line-height: 22px;
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid #E3E3E3;
+        padding: 22px 22px;
+        margin-top: 40px;
+    }
 }
