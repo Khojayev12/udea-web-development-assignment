@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/home.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/footer.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/feed.css') }}" />
 </head>
 
 <body>
@@ -15,6 +16,7 @@
         <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="Cook Book Logo" class="header-main-logo" />
         <nav class="header-nav">
             <a class="header-nav-a" href="{{ url_for('index') }}">Home</a>
+            <a class="header-nav-a" href="{{ url_for('feed') }}">Feed</a>
             <a class="header-nav-a" href="{{ url_for('login') }}">Login</a>
             <a class="header-nav-a" href="{{ url_for('signup') }}">Sign up</a>
         </nav>

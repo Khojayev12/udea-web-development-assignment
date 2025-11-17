@@ -6,6 +6,10 @@ app = Flask(__name__)
 def index():
     return render_template('pages/home.html')
 
+@app.route('/feed')
+def feed():
+    return render_template('pages/feed.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
