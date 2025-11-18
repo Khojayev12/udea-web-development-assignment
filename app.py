@@ -8,6 +8,10 @@ mydb = DBHandler()
 def index():
     return render_template('pages/home.html')
 
+@app.route('/feed')
+def feed():
+    return render_template('pages/feed.html')
+
 
 @app.route('/home', methods=['GET', 'POST'])
 def home():
@@ -61,4 +65,4 @@ def signupApi():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='10.0.0.154')

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/home.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/footer.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/feed.css') }}" />
 </head>
 
 <body>
@@ -15,6 +16,7 @@
         <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="Cook Book Logo" class="header-main-logo" />
         <nav class="header-nav">
             <a class="header-nav-a" href="{{ url_for('index') }}">Home</a>
+            <a class="header-nav-a" href="{{ url_for('feed') }}">Feed</a>
             <a class="header-nav-a" href="{{ url_for('login') }}">Login</a>
             <a class="header-nav-a" href="{{ url_for('signup') }}">Sign up</a>
         </nav>
@@ -30,16 +32,20 @@
         <div class="footer-right">
             <p class="footer-right-title">SOCIAL MEDIA</p>
             <div class="footer-list-item">
-                <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="" class="footer-social-logo">
+                <img src="{{ url_for('static', filename='media/telegram-logo.png') }}" alt="" class="footer-social-logo">
                 <a href="" class="footer-social-name">Telegram</a>
             </div>
             <div class="footer-list-item">
-                <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="" class="footer-social-logo">
+                <img src="{{ url_for('static', filename='media/instagram-logo.png') }}" alt="" class="footer-social-logo">
                 <a href="" class="footer-social-name">Instagram</a>
             </div>
             <div class="footer-list-item">
-                <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="" class="footer-social-logo">
+                <img src="{{ url_for('static', filename='media/facebook-logo.png') }}" alt="" class="footer-social-logo">
                 <a href="" class="footer-social-name">Facebook</a>
+            </div>
+            <div class="footer-list-item">
+                <img src="{{ url_for('static', filename='media/linkedin-logo.png') }}" alt="" class="footer-social-logo">
+                <a href="" class="footer-social-name">Linkedin</a>
             </div>
         </div>
         <img src="{{ url_for('static', filename='media/footer.png') }}" alt="" class="footer-img">
