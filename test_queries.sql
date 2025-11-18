@@ -55,3 +55,14 @@ FROM Tags t
 JOIN Recipes r ON t.recipe_id = r.recipe_id
 GROUP BY r.recipe_id, r.title, r.category, r.calories
 ORDER BY r.category, r.title;
+
+
+select * from Users
+
+
+ALTER TABLE Users
+    MODIFY name VARCHAR(100) NULL,
+    MODIFY surname VARCHAR(100) NULL,
+    MODIFY about_me TEXT NULL,
+    MODIFY profile_img_path VARCHAR(255) NULL,
+    MODIFY date_registered DATETIME NULL;
