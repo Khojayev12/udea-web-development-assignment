@@ -14,10 +14,13 @@
         <div class="reg-main-left">
             <form action="{{ url_for('signup') }}" class="reg-login-form" method="post">
                 <label for="form" class="reg-main-label">SIGN UP</label>
-                <input type="name" placeholder="Name" class="reg-input">
-                <input type="email" placeholder="Email" class="reg-input">
-                <input type="password" placeholder="Password" class="reg-input">
+                <input type="text" name="name" placeholder="Name" class="reg-input" value="{{ request.form.get('name', '') }}" required>
+                <input type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
+                <input type="password" name="password" placeholder="Password" class="reg-input" required>
                 <button class="reg-submit-btn">SUBMIT</button>
+                {% if error %}
+                <p class="reg-error">{{ error }}</p>
+                {% endif %}
                 <p class="reg-additional-text">
                     <a href="{{ url_for('login') }}" class="reg-redirect">Login</a> if you already have an account.
                 </p>

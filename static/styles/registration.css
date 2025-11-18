@@ -89,6 +89,12 @@
 .reg-redirect{
     color: black;
 }
+.reg-error{
+    margin-top: 20px;
+    color: #c0392b;
+    font-family: 'Montserrat';
+    font-size: 18px;
+}
 
 .reg-main-back-element{
     width: 15vw;
