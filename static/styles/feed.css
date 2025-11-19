@@ -27,7 +27,7 @@
   border: none;
   font-size: 24px;
   font-style: bold;
-  transform: rotate(90deg);
+  transform: 0.3s;
   width: 30px;
   height: 30px;
   border-radius: 15px;
@@ -43,6 +43,15 @@
 .feed-subsection-open{
   display: block;
 }
+
+.dropdown-btn-close{
+  transform: rotate(0deg);
+}
+
+.dropdown-btn-open{
+  transform: rotate(90deg);
+}
+
 .feed-filter-option-input{
   width: 16px;
   height: 16px;
