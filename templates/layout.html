@@ -9,17 +9,25 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/index.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/footer.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles/feed.css') }}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
 <body>
     <header class="header-main">
-        <img src="{{ url_for('static', filename='media/Logo.png') }}" alt="Cook Book Logo" class="header-main-logo" />
-        <nav class="header-nav">
-            <a class="header-nav-a" href="{{ url_for('index') }}">Home</a>
-            <a class="header-nav-a" href="{{ url_for('feed') }}">Feed</a>
-            <a class="header-nav-a" href="{{ url_for('login') }}">Login</a>
-            <a class="header-nav-a" href="{{ url_for('signup') }}">Sign up</a>
-        </nav>
+        <a href="{{ url_for('index') }}"><img src="{{ url_for('static', filename='media/Logo.png') }}" alt="Cook Book Logo" class="header-main-logo" /></a>
+        {% if 'user' not in session %}
+            <nav class="header-nav">
+                <a class="header-nav-a" href="{{ url_for('login') }}">Login </a>
+                <a class="header-nav-a" href="{{ url_for('signup') }}">Sign up</a>
+            </nav>
+        {% else %}
+            <nav class="header-nav">
+                <a class="header-nav-a" href="{{ url_for('profile') }}"><i class="fa-regular fa-circle-user"></i></a>
+                <a class="header-nav-a" href="{{ url_for('notifications') }}"><i class="fa-regular fa-bell"></i></a>
+                <a class="header-nav-a" href="{{ url_for('add') }}"><i class="fa-solid fa-plus"></i></a>
+            </nav>
+        {% endif %}
+        
     </header>
     {% block body %}{% endblock %}
     <footer class="footer-main">

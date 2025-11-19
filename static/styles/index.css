@@ -29,12 +29,17 @@ body {
     background-color: #111214;
     z-index: 100;
 }
-
+.header-icon{
+  background-color: white;
+  color: white;
+}
 .header-main-logo {
     margin-top: 16px;
     margin-left: 16px;
     width: 119px;
     height: 84px;
+    object-fit: cover;
+    object-position: center;
 }
 
 .header-nav {
@@ -191,11 +196,20 @@ body {
 
 @media (max-width: 540px) {
     .header-main-logo{
-        width: 60px;
+        margin-top: 20px;
+    margin-left: 20px;
+    width: 80px;
+    height: auto;
     }
     .header-nav {
-        gap: 16px;
+        gap: 0px;
         justify-content: center;
+    }
+    .header-nav-a{
+      margin-right: 20px;
+    }
+    .header-main{
+      height: 90px;
     }
 
 
@@ -205,4 +219,5 @@ body {
 
 a {
   cursor: pointer;
+  text-decoration: none;
 }

@@ -17,7 +17,7 @@
       <button class="main-hero-add-btn">ADD RECIPE</button>
     </div>
     <div class="list-section-1">
-      <h2 class="list-section-title">WHAT WE ARE CRAVING</h2>
+      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">WHAT WE ARE CRAVING</h2></a>
       <div class="list-section-1-item-group">
         <div class="list-section-1-item">
           <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
@@ -42,7 +42,7 @@
     </div>
 
     <div class="list-section-1">
-      <h2 class="list-section-title">MORE RECIPES</h2>
+      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">MORE RECIPES</h2></a>
       <div class="list-section-1-item-group">
         <div class="retsept-list-item">
           <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
@@ -68,7 +68,7 @@
     </div>
 
     <div class="list-section-1">
-      <h2 class="list-section-title">COLLECTIONS</h2>
+      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">COLLECTIONS</h2></a>
       <div class="list-section-1-item-group">
         <div class="collection-list-item">
           <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
@@ -88,7 +88,7 @@
     <div class="populars-section">
         <div class="populars-sec-left">
             <p class="populars-left-title">The Most Popular Recipes on CookBook Right Now</p>
-            <a class="populars-left-seeall">View Complete Guide > </a>
+            <a class="populars-left-seeall" href="{{ url_for('feed') }}">View Complete Guide > </a>
             <div class="populars-middle-line"></div>
         </div>
         <div class="populars-sec-right">
