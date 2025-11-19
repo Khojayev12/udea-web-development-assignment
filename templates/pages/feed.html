@@ -2,31 +2,56 @@
 
 {% block body%}
 {% set card_image = url_for('static', filename='media/registration.png') %}
-    <div class="feed-page">
-        <div class="feed-filters-pane">
-            <h2 class="feed-filter-title">Filters</h2>
-            
+<script>
+    const close_subsection = (section_id, new_state) =>{
+        if (new_state == 'open'){
+            document.getElementById(section_id).className = "feed-subsection-close";
+        }
+        else{
+            document.getElementById(section_id).className = "feed-subsection-open";
+        }
+    }
+</script>
+<div class="feed-page">
+    <div class="feed-filters-pane">
+        <h2 class="feed-filter-title">Filters</h2>
+        <div class="feed-filter-dropdown">
+            <div class="feed-filter-sub-section" >
+                <h3 class="feed-filter-sub-title">Cuisine</h3>
+                <button class="feed-filter-subsection-btn">></button>
+            </div>
+            <form class="feed-subsection-open" id="feed-filter-subsection-1">
+                <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
+                <label for="Italian"  class="feed-filter-option">Italian</label><br>
+                <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
+                <label for="Mexican"  class="feed-filter-option">Mexican</label><br>
+                <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
+                <label for="Indian"  class="feed-filter-option">Indian</label><br>
+                <input type="radio" id="Indian" name="Cuisine" value="American" class="feed-filter-option-input">
+                <label for="American"  class="feed-filter-option">American</label>
+            </form>
         </div>
-        <div class="feed-list-page">
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-            {% set template =  './components/feedcard.html' %} {% include template %}
-        </div>
-        
-
     </div>
+    <div class="feed-list-page">
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+    </div>
+
+
+</div>
 {% endblock %}

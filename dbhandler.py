@@ -3,11 +3,14 @@ from mysql.connector import Error
 
 class DBHandler():
     def __init__(self):
-        self.cnx = mysql.connector.connect(user='root', password='Scripter1211#',
-                              host='localhost',
-                              database='recipedb')
-        self.cursor = self.cnx.cursor()
-        print("DBhandler initiated")
+        try:
+            self.cnx = mysql.connector.connect(user='root', password='Scripter1211#',
+                                host='khoja.jprq.live', port='37615',
+                                database='recipedb')
+            self.cursor = self.cnx.cursor()
+            print("DBhandler initiated")
+        except Error as e:
+            print("Failed to connect!", e)
     def closer_connection(self):
         self.cnx.close()
         print("Database connection closed!")
