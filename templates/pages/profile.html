@@ -1,10 +1,52 @@
 {% extends 'layout.html' %}
 
 {% block body%}
-{% set card_image = url_for('static', filename='media/registration.png') %}
+{% set profile_image = url_for('static', filename='media/registration.png') %}
 
-<div class="feed-page">
+<div class="profile-page">
+   <script>
+            function signout() {
+               console.log("Signing out !!!!!!!!!")
+                fetch('/signout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(window.location.assign("/"))
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+
+                console.log("User Logged OUT")
+            }
+        </script>
    profile page
+   <div class="profile-s1">
+      <div class="profile-s1-info">
+         <div class="profile-s1-info-left">
+            <img src="{{ profile_image }}" alt="Profile Image" class="profile-s1-info-left-img" />
+         </div>
+         <div class="profile-s1-info-right">
+            <h1 class="profile-s1-info-right-name">Rhena</h1>
+            <div class="recipe-card__rating" aria-label="Rated four out of five stars">
+                    <span class="rating-star is-filled"></span>
+                    <span class="rating-star is-filled"></span>
+                    <span class="rating-star is-filled"></span>
+                    <span class="rating-star is-filled"></span>
+                    <span class="rating-star"></span>
+                </div>
+            <div class="profile-s1-social-list">
+                <img src="{{ url_for('static', filename='media/linkedin-logo.png') }}" alt="" class="footer-social-logo">
+                 <img src="{{ url_for('static', filename='media/telegram-logo.png') }}" alt="" class="footer-social-logo">
+                  <img src="{{ url_for('static', filename='media/instagram-logo.png') }}" alt="" class="footer-social-logo">
+            </div>
+         </div>
+      </div>
+      <div class="profile-s1-controls">
+         <button>Edit Profile</button>
+         <button onclick="signout()">Sign Out</button>
+      </div>
+   </div>
 
 </div>
 {% endblock %}

@@ -24,6 +24,15 @@ def authenticate_user(email: str, password: str):
     return None
 
 
+
+@app.route('/signout', methods=['GET', 'POST'])
+def signout():
+    if request.method == 'POST':
+        session.clear()
+    return redirect(url_for('index'))
+
+
+
 @app.route('/')
 def index():
     return render_template('pages/home.html')
