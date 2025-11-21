@@ -46,6 +46,45 @@
          <button onclick="signout()" class="profile-signout-btn">Sign Out</button>
       </div>
    </div>
+   <div class="profile-s2-description" >
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Non aperiam, asperiores magni quaerat minima vitae ducimus dolores laboriosam, doloremque quae ipsam blanditiis excepturi praesentium! Hic at magni tempore dolore corrupti.
+   </div>
+   <div class="profile-stats-div" >
+      <div class="profile-stat-block" >
+         <h2 class="profile-stat-block-t" >268</h2>
+         <p class="profile-stat-block-d">Likes</p>
+      </div>
+      <div class="profile-stat-block" >
+         <h2 class="profile-stat-block-t" >149</h2>
+         <p class="profile-stat-block-d">Follower</p>
+      </div>
+      <div class="profile-stat-block" >
+         <h2 class="profile-stat-block-t" >268</h2>
+         <p class="profile-stat-block-d">Reviews</p>
+      </div>
+   </div>
+
+   <div class="profile-posted">
+      <h2 class="profile-posted-title">Recipes Posted</h2>
+      <div class="profile-posted-list" >
+         {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+      </div>
+   </div>
+
+   <div class="profile-posted">
+      <h2 class="profile-posted-title">Favourites</h2>
+      <div class="profile-posted-list" >
+         {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+        {% set template = './components/feedcard.html' %} {% include template %}
+      </div>
+   </div>
 
 </div>
 {% endblock %}
