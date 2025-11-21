@@ -24,14 +24,15 @@ def authenticate_user(email: str, password: str):
     return None
 
 
-
+# adding comment, making change
 @app.route('/signout', methods=['GET', 'POST'])
 def signout():
     if request.method == 'POST':
         session.clear()
     return redirect(url_for('index'))
 
-
+def test_git():
+    pass
 
 @app.route('/')
 def index():
