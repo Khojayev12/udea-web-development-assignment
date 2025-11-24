@@ -1,13 +1,21 @@
 .feed-page {
   display: flex;
+  position: relative;
   justify-content: center;
   padding: 48px 16px;
   margin-top: 100px;
   background-color: #f6f6f6;
 }
 .feed-filters-pane {
-  width: 300px;
   font-family: 'Montserrat';
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.filters-open{
+  width: 300px;
+}
+.filters-close{
+  width: 0px;
 }
 .feed-filter-title{
   font-weight: 600;
@@ -60,7 +68,7 @@
   box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
 }
 .feed-list-page {
-  width: calc(100% - 300px);
+  width: calc(100% - 340px);
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
