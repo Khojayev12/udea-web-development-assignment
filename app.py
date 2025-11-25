@@ -149,11 +149,46 @@ def home():
     popular_recipes = mydb.fetch_popular_recipes()
     return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
 
-@app.route('/profile', methods=['GET', 'POST'])
+@app.route('/profile')
 def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('pages/profile.html')
+    return redirect(url_for('profile_view', user_id=session['user']))
+
+@app.route('/profile/<int:user_id>', methods=['GET', 'POST'])
+def profile_view(user_id: int):
+    profile_data = mydb.fetch_user_basic(user_id)
+    if not profile_data:
+        abort(404)
+
+    session_user = session.get('user')
+    is_owner = session_user == user_id
+    if request.method == 'POST':
+        if not session_user:
+            return redirect(url_for('login'))
+        action = request.form.get('action')
+        if action == 'follow' and not is_owner:
+            mydb.follow_user(user_id, session_user)
+        elif action == 'unfollow' and not is_owner:
+            mydb.unfollow_user(user_id, session_user)
+        return redirect(url_for('profile_view', user_id=user_id))
+
+    stats = mydb.fetch_user_stats(user_id)
+    recipes = mydb.fetch_user_recipes(user_id, limit=4)
+    favorites = mydb.fetch_user_liked_recipes(user_id, limit=4) if is_owner else []
+    is_following = False
+    if session_user and not is_owner:
+        is_following = mydb.is_following_user(user_id, session_user)
+
+    return render_template(
+        'pages/profile.html',
+        profile=profile_data,
+        stats=stats,
+        recipes=recipes,
+        favorites=favorites,
+        is_owner=is_owner,
+        is_following=is_following
+    )
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():

@@ -1,88 +1,144 @@
 {% extends 'layout.html' %}
 
 {% block body%}
-{% set profile_image = url_for('static', filename='media/registration.png') %}
+{% set profile_image = profile.profile_img_path if profile and profile.profile_img_path else url_for('static', filename='media/nouserphoto.png') %}
 
 <div class="profile-page">
-   <script>
-            function signout() {
-               console.log("Signing out !!!!!!!!!")
-                fetch('/signout', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(window.location.assign("/"))
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-
-                console.log("User Logged OUT")
-            }
-        </script>
    <div class="profile-s1">
       <div class="profile-s1-info">
          <div class="profile-s1-info-left">
             <img src="{{ profile_image }}" alt="Profile Image" class="profile-s1-info-left-img" />
          </div>
          <div class="profile-s1-info-right">
-            <h1 class="profile-s1-info-right-name">Rhena</h1>
+            <h1 class="profile-s1-info-right-name">{{ profile.name }} {{ profile.surname }}</h1>
             <div class="profile-rating">
-               <i class="fa-solid fa-star"></i>
-               <i class="fa-solid fa-star"></i>
-               <i class="fa-solid fa-star"></i>
-               <i class="fa-solid fa-star"></i>
-               <i class="fa-regular fa-star"></i>
-            </div>
-            <div class="profile-s1-social-list">
-                <a href="#"><img src="{{ url_for('static', filename='media/linkedin-logo.png') }}" alt="" class="profile-social-logo"></a>
-               <a href="#"><img src="{{ url_for('static', filename='media/telegram-logo.png') }}" alt="" class="profile-social-logo"></a>
-               <a href="#"><img src="{{ url_for('static', filename='media/instagram-logo.png') }}" alt="" class="profile-social-logo"></a>
+               {% set rating_int = (stats.rating_avg or 0)|int %}
+               {% for _ in range(0, 5) %}
+                  {% if loop.index <= rating_int %}
+                     <i class="fa-solid fa-star"></i>
+                  {% else %}
+                     <i class="fa-regular fa-star"></i>
+                  {% endif %}
+               {% endfor %}
+               <span style="font-size:18px; margin-left:8px;">{{ '%.1f'|format(stats.rating_avg or 0) }} ({{ stats.rating_count }} ratings)</span>
             </div>
          </div>
       </div>
       <div class="profile-s1-controls">
-         <button class="profile-edit-btn" >Edit Profile</button>
-         <button onclick="signout()" class="profile-signout-btn">Sign Out</button>
+         {% if is_owner %}
+            <button class="profile-edit-btn" >Edit Profile</button>
+            <form action="{{ url_for('signout') }}" method="post">
+               <button class="profile-signout-btn" type="submit">Sign Out</button>
+            </form>
+         {% else %}
+            <form action="{{ url_for('profile_view', user_id=profile.id) }}" method="post">
+               {% if is_following %}
+                  <input type="hidden" name="action" value="unfollow">
+                  <button class="profile-edit-btn" type="submit">Unfollow</button>
+               {% else %}
+                  <input type="hidden" name="action" value="follow">
+                  <button class="profile-edit-btn" type="submit">Follow</button>
+               {% endif %}
+            </form>
+         {% endif %}
       </div>
    </div>
    <div class="profile-s2-description" >
-      Lorem ipsum dolor sit amet consectetur adipisicing elit. Non aperiam, asperiores magni quaerat minima vitae ducimus dolores laboriosam, doloremque quae ipsam blanditiis excepturi praesentium! Hic at magni tempore dolore corrupti.
+      {{ profile.about if profile.about else 'No bio added yet.' }}
    </div>
    <div class="profile-stats-div" >
       <div class="profile-stat-block" >
-         <h2 class="profile-stat-block-t" >268</h2>
+         <h2 class="profile-stat-block-t" >{{ stats.likes }}</h2>
          <p class="profile-stat-block-d">Likes</p>
       </div>
       <div class="profile-stat-block" >
-         <h2 class="profile-stat-block-t" >149</h2>
-         <p class="profile-stat-block-d">Follower</p>
+         <h2 class="profile-stat-block-t" >{{ stats.followers }}</h2>
+         <p class="profile-stat-block-d">Followers</p>
       </div>
       <div class="profile-stat-block" >
-         <h2 class="profile-stat-block-t" >268</h2>
+         <h2 class="profile-stat-block-t" >{{ stats.reviews }}</h2>
          <p class="profile-stat-block-d">Reviews</p>
+      </div>
+      <div class="profile-stat-block" >
+         <h2 class="profile-stat-block-t" >{{ stats.posted }}</h2>
+         <p class="profile-stat-block-d">Recipes</p>
       </div>
    </div>
 
    <div class="profile-posted">
       <h2 class="profile-posted-title">Recipes Posted</h2>
       <div class="profile-posted-list" >
-         {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
+         {% if recipes and recipes|length > 0 %}
+            {% for recipe in recipes %}
+               <a class="recipe-card" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
+                  <div class="recipe-card__image-wrapper">
+                     <img class="recipe-card__image" src="{{ recipe.image or url_for('static', filename='media/registration.png') }}" alt="{{ recipe.title }}">
+                     <button class="recipe-card__favorite" type="button" aria-label="Save {{ recipe.title }}">
+                        <svg class="recipe-card__favorite-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12.1 20.3a1 1 0 0 1-1.2 0C6.1 16.9 3 13.9 3 10.2 3 7.5 5.2 5 8.3 5c1.5 0 2.9.7 3.7 1.9C12.9 5.7 14.3 5 15.8 5 19 5 21 7.5 21 10.2c0 3.7-3.1 6.7-7.9 10.1z"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+                     </button>
+                  </div>
+                  <div class="recipe-card__body">
+                     <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+                     <p class="recipe-card__author">{{ recipe.prepare_time or 0 }} min</p>
+                     <div class="recipe-card__rating" aria-label="Rated {{ recipe.rating or 0 }} out of five stars">
+                        {% set rating_int = (recipe.rating or 0)|int %}
+                        {% for _ in range(0, 5) %}
+                            <span class="rating-star {% if loop.index <= rating_int %}is-filled{% endif %}"></span>
+                        {% endfor %}
+                     </div>
+                  </div>
+               </a>
+            {% endfor %}
+         {% else %}
+            <p>No recipes posted yet.</p>
+         {% endif %}
       </div>
    </div>
 
+   {% if is_owner %}
    <div class="profile-posted">
       <h2 class="profile-posted-title">Favourites</h2>
       <div class="profile-posted-list" >
-         {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
+         {% if favorites and favorites|length > 0 %}
+            {% for recipe in favorites %}
+               <a class="recipe-card" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
+                  <div class="recipe-card__image-wrapper">
+                     <img class="recipe-card__image" src="{{ recipe.image or url_for('static', filename='media/registration.png') }}" alt="{{ recipe.title }}">
+                     <button class="recipe-card__favorite" type="button" aria-label="Save {{ recipe.title }}">
+                        <svg class="recipe-card__favorite-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M12.1 20.3a1 1 0 0 1-1.2 0C6.1 16.9 3 13.9 3 10.2 3 7.5 5.2 5 8.3 5c1.5 0 2.9.7 3.7 1.9C12.9 5.7 14.3 5 15.8 5 19 5 21 7.5 21 10.2c0 3.7-3.1 6.7-7.9 10.1z"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+                        </svg>
+                     </button>
+                  </div>
+                  <div class="recipe-card__body">
+                     <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+                     <p class="recipe-card__author">{{ recipe.prepare_time or 0 }} min</p>
+                     <div class="recipe-card__rating" aria-label="Rated {{ recipe.rating or 0 }} out of five stars">
+                        {% set rating_int = (recipe.rating or 0)|int %}
+                        {% for _ in range(0, 5) %}
+                            <span class="rating-star {% if loop.index <= rating_int %}is-filled{% endif %}"></span>
+                        {% endfor %}
+                     </div>
+                  </div>
+               </a>
+            {% endfor %}
+         {% else %}
+            <p>No favourites yet.</p>
+         {% endif %}
       </div>
    </div>
-
+   {% endif %}
 </div>
 {% endblock %}

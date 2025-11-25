@@ -223,3 +223,153 @@ class DBHandler():
         except Error as err:
             print("Failed to count feed recipes:", err)
             return 0
+
+    def fetch_user_basic(self, user_id: int):
+        """Return basic user profile info."""
+        query = "select user_id, name, surname, about_me, profile_img_path from Users where user_id = %s"
+        try:
+            self.cursor.execute(query, (user_id,))
+            row = self.cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row[0],
+                "name": row[1],
+                "surname": row[2] or "",
+                "about": row[3] or "",
+                "profile_img_path": row[4]
+            }
+        except Error as err:
+            print("Failed to fetch user basic:", err)
+            return None
+
+    def fetch_user_stats(self, user_id: int):
+        """Return basic stats for user profile."""
+        stats = {"likes": 0, "followers": 0, "reviews": 0, "posted": 0, "rating_avg": 0, "rating_count": 0}
+        try:
+            self.cursor.execute(
+                """
+                select count(*) from Likes l
+                join Recipes r on l.recipe_id = r.recipe_id
+                where r.author_id = %s
+                """,
+                (user_id,)
+            )
+            stats["likes"] = self.cursor.fetchone()[0] or 0
+
+            self.cursor.execute("select count(*) from Followers where user_id = %s", (user_id,))
+            stats["followers"] = self.cursor.fetchone()[0] or 0
+
+            self.cursor.execute(
+                """
+                select count(*) from Ratings rt
+                join Recipes r on rt.recipe_id = r.recipe_id
+                where r.author_id = %s
+                """,
+                (user_id,)
+            )
+            stats["reviews"] = self.cursor.fetchone()[0] or 0
+
+            self.cursor.execute("select count(*) from Recipes where author_id = %s", (user_id,))
+            stats["posted"] = self.cursor.fetchone()[0] or 0
+
+            self.cursor.execute(
+                """
+                select avg(rt.rating), count(rt.rating)
+                from Ratings rt
+                join Recipes r on rt.recipe_id = r.recipe_id
+                where r.author_id = %s
+                """,
+                (user_id,)
+            )
+            rating_row = self.cursor.fetchone()
+            if rating_row:
+                stats["rating_avg"] = float(rating_row[0]) if rating_row[0] is not None else 0
+                stats["rating_count"] = rating_row[1] or 0
+        except Error as err:
+            print("Failed to fetch user stats:", err)
+        return stats
+
+    def fetch_user_recipes(self, user_id: int, limit=8):
+        query = """
+            select recipe_id, title, cover_img_path, rating, prepare_time
+            from Recipes
+            where author_id = %s
+            order by date_posted desc
+            limit %s
+        """
+        try:
+            self.cursor.execute(query, (user_id, limit))
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "title": row[1],
+                    "image": row[2],
+                    "rating": row[3],
+                    "prepare_time": row[4],
+                } for row in rows
+            ]
+        except Error as err:
+            print("Failed to fetch user recipes:", err)
+            return []
+
+    def fetch_user_liked_recipes(self, user_id: int, limit=8):
+        query = """
+            select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
+            from Likes l
+            join Recipes r on l.recipe_id = r.recipe_id
+            where l.user_id = %s
+            order by l.date_liked desc
+            limit %s
+        """
+        try:
+            self.cursor.execute(query, (user_id, limit))
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "title": row[1],
+                    "image": row[2],
+                    "rating": row[3],
+                    "prepare_time": row[4],
+                } for row in rows
+            ]
+        except Error as err:
+            print("Failed to fetch liked recipes:", err)
+            return []
+
+    def is_following_user(self, target_user_id: int, follower_id: int):
+        query = "select 1 from Followers where user_id = %s and follower_id = %s limit 1"
+        try:
+            self.cursor.execute(query, (target_user_id, follower_id))
+            return self.cursor.fetchone() is not None
+        except Error as err:
+            print("Failed to check following:", err)
+            return False
+
+    def follow_user(self, target_user_id: int, follower_id: int):
+        if target_user_id == follower_id:
+            return False
+        query = "insert ignore into Followers (user_id, follower_id) values (%s, %s)"
+        try:
+            self.cursor.execute(query, (target_user_id, follower_id))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Follow failed:", err)
+            self.cnx.rollback()
+            return False
+
+    def unfollow_user(self, target_user_id: int, follower_id: int):
+        if target_user_id == follower_id:
+            return False
+        query = "delete from Followers where user_id = %s and follower_id = %s"
+        try:
+            self.cursor.execute(query, (target_user_id, follower_id))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Unfollow failed:", err)
+            self.cnx.rollback()
+            return False
