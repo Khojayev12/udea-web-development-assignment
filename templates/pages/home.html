@@ -19,51 +19,42 @@
     <div class="list-section-1">
       <a href="{{ url_for('feed') }}"><h2 class="list-section-title">New Recipes</h2></a>
       <div class="list-section-1-item-group">
-        <div class="list-section-1-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
-          <p class="list-item-name">Chicken Pasta</p>
-        </div>
-
-        <div class="list-section-1-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
-          <p class="list-item-name">Chicken Pasta</p>
-        </div>
-
-        <div class="list-section-1-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
-          <p class="list-item-name">Chicken Pasta</p>
-        </div>
-
-        <div class="list-section-1-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="list-item-img" />
-          <p class="list-item-name">Chicken Pasta</p>
-        </div>
+        {% if recent_recipes and recent_recipes|length > 0 %}
+          {% for recipe in recent_recipes %}
+            <a href="{{ url_for('recipe', recipe_id=recipe.id) }}" class="list-section-1-item">
+              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="list-item-img" />
+              <p class="list-item-name">{{ recipe.title }}</p>
+            </a>
+          {% endfor %}
+        {% else %}
+          {% for _ in range(4) %}
+            <div class="list-section-1-item">
+              <img src="{{ registration_image }}" alt="Recipe placeholder" class="list-item-img" />
+              <p class="list-item-name">Coming soon</p>
+            </div>
+          {% endfor %}
+        {% endif %}
       </div>
     </div>
 
     <div class="list-section-1">
       <a href="{{ url_for('feed') }}"><h2 class="list-section-title">MORE RECIPES</h2></a>
       <div class="list-section-1-item-group">
-        <div class="retsept-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
-          <p class="retsept-list-name">Chicken Pasta</p>
-        </div>
-        <div class="retsept-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
-          <p class="retsept-list-name">Chicken Pasta</p>
-        </div>
-        <div class="retsept-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
-          <p class="retsept-list-name">Chicken Pasta</p>
-        </div>
-        <div class="retsept-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
-          <p class="retsept-list-name">Chicken Pasta</p>
-        </div>
-        <div class="retsept-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="retsept-list-img" />
-          <p class="retsept-list-name">Chicken Pasta</p>
-        </div>
+        {% if more_recipes and more_recipes|length > 0 %}
+          {% for recipe in more_recipes %}
+            <a href="{{ url_for('recipe', recipe_id=recipe.id) }}" class="retsept-list-item">
+              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="retsept-list-img" />
+              <p class="retsept-list-name">{{ recipe.title }}</p>
+            </a>
+          {% endfor %}
+        {% else %}
+          {% for _ in range(5) %}
+            <div class="retsept-list-item">
+              <img src="{{ registration_image }}" alt="Recipe placeholder" class="retsept-list-img" />
+              <p class="retsept-list-name">Coming soon</p>
+            </div>
+          {% endfor %}
+        {% endif %}
       </div>
     </div>
 
@@ -92,18 +83,21 @@
             <div class="populars-middle-line"></div>
         </div>
         <div class="populars-sec-right">
-            <a class="populars-sec-right-item">
-                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
-                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
-            </a>
-            <a class="populars-sec-right-item">
-                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
-                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
-            </a>
-            <a class="populars-sec-right-item">
-                <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="populars-right-item-img">
-                <p class="populars-sec-right-title">"Garlic bread: A comforting slice of heaven."</p>
-            </a>
+            {% if popular_recipes and popular_recipes|length > 0 %}
+                {% for recipe in popular_recipes %}
+                    <a class="populars-sec-right-item" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
+                        <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="populars-right-item-img">
+                        <p class="populars-sec-right-title">{{ recipe.title }}</p>
+                    </a>
+                {% endfor %}
+            {% else %}
+                {% for _ in range(3) %}
+                    <a class="populars-sec-right-item">
+                        <img src="{{ registration_image }}" alt="Recipe placeholder" class="populars-right-item-img">
+                        <p class="populars-sec-right-title">Coming soon</p>
+                    </a>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, request, url_for, jsonify, session
+from flask import Flask, render_template, redirect, request, url_for, jsonify, session, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 from dbhandler import DBHandler
 app = Flask(__name__)
@@ -36,86 +36,107 @@ def test_git():
 
 @app.route('/')
 def index():
-    return render_template('pages/home.html')
+    recent_recipes = mydb.fetch_recent_recipes()
+    more_recipes = mydb.fetch_more_recipes()
+    popular_recipes = mydb.fetch_popular_recipes()
+    return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
 
 
 @app.route('/feed')
 def feed():
-    return render_template('pages/feed.html')
+    category = request.args.get('category') or None
+    difficulty = request.args.get('difficulty') or None
+    max_time_raw = request.args.get('max_time')
+    max_time = None
+    if max_time_raw and max_time_raw.isdigit():
+        max_time = int(max_time_raw)
+
+    page_raw = request.args.get('page', '1')
+    page = int(page_raw) if page_raw.isdigit() and int(page_raw) > 0 else 1
+    per_page = 12
+    offset = (page - 1) * per_page
+
+    filters = mydb.fetch_feed_filters()
+    total_count = mydb.fetch_feed_count(category=category, difficulty=difficulty, max_time=max_time)
+    recipes = mydb.fetch_feed_recipes(category=category, difficulty=difficulty, max_time=max_time, limit=per_page, offset=offset)
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    prev_page = page - 1 if page > 1 else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        'pages/feed.html',
+        recipes=recipes,
+        filters=filters,
+        active_category=category,
+        active_difficulty=difficulty,
+        active_max_time=max_time_raw or "",
+        page=page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page
+    )
 
 
 @app.route('/recipe/<int:recipe_id>')
 def recipe(recipe_id: int):
-    recipe_data = {
-        "id": recipe_id,
-        "title": "Chicken Pasta",
-        "rating": 4.5,
-        "rating_count": 146,
-        "image": url_for('static', filename='media/registration.png'),
-        "ingredients": [
-            "225g fettuccine or any pasta of your choice",
-            "450g boneless, skinless chicken breasts, cut into bite-sized pieces",
-            "salt",
-            "black pepper",
-            "2 tablespoons olive oil",
-            "3 cloves garlic, minced",
-            "240ml heavy cream",
-            "100g grated parmesan cheese",
-            "fresh parsley, chopped (for garnish)",
-            "tomato, chopped (for garnish)",
-        ],
-        "nutrition": [
-            {"label": "Protein", "value": "45g"},
-            {"label": "Carbs", "value": "50g"},
-            {"label": "Fats", "value": "40g"},
-            {"label": "Sugar", "value": "2g"},
-            {"label": "Fiber", "value": "3g"},
-        ],
-        "stats": [
-            {"label": "Ingredients", "value": "8"},
-            {"label": "Minutes", "value": "15"},
-            {"label": "Calories", "value": "720"},
-        ],
-        "steps": [
-            {
-                "title": "Cook the Pasta",
-                "items": [
-                    "Cook the pasta according to the package instructions. Drain and set aside.",
-                ],
-            },
-            {
-                "title": "Cook the Chicken",
-                "items": [
-                    "Season chicken pieces with salt and pepper.",
-                    "In a pan, heat olive oil over medium heat.",
-                    "Add chicken and cook until browned and fully cooked. Set aside.",
-                ],
-            },
-            {
-                "title": "Make the Alfredo Sauce",
-                "items": [
-                    "In the same pan, add minced garlic and sauté for 1 minute.",
-                    "Pour in the heavy cream and bring to a gentle simmer.",
-                    "Stir in Parmesan cheese until melted and the sauce is smooth.",
-                ],
-            },
-            {
-                "title": "Combine and Serve",
-                "items": [
-                    "Add the cooked chicken to the sauce.",
-                    "Toss in the cooked pasta until well coated.",
-                    "Garnish with chopped parsley.",
-                    "Enjoy your quick and tasty Easy Chicken Alfredo Pasta!",
-                ],
-            },
-        ],
-        "tags": ["pasta", "chicken pasta", "pasta recipe", "creamy pasta", "homemade dinner", "quick & easy"],
-        "reviews": [
-            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit. Et sollicitudin quis cras tellus. Nam tristique faucibus ultrices sit dictum senectus."},
-            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit. Et sollicitudin quis cras tellus. Nam tristique faucibus ultrices sit dictum senectus. Quam sed pulvinar ipsum tortor vulputate quis mattis."},
-            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit."},
-        ],
+    recipe_row = mydb.fetch_recipe_detail(recipe_id)
+    if not recipe_row:
+        abort(404)
+
+    image_path = recipe_row.get("cover_img_path")
+    rating_value = float(recipe_row.get("rating") or 0)
+    ingredients = recipe_row.get("ingredients", [])
+    tags = recipe_row.get("tags", [])
+
+    nutrition = []
+    nutrition_map = {
+        "Protein": recipe_row.get("protein"),
+        "Carbs": recipe_row.get("carbs"),
+        "Fats": recipe_row.get("fats"),
+        "Sugar": recipe_row.get("sugar"),
+        "Fiber": recipe_row.get("fiber"),
     }
+    for label, value in nutrition_map.items():
+        if value is not None:
+            nutrition.append({"label": label, "value": f"{value}".rstrip('0').rstrip('.') if isinstance(value, float) else str(value)})
+
+    stats = [
+        {"label": "Ingredients", "value": str(len(ingredients))},
+        {"label": "Minutes", "value": str(recipe_row.get("prepare_time") or 0)},
+        {"label": "Calories", "value": str(recipe_row.get("calories") or 0)},
+    ]
+
+    procedure_text = recipe_row.get("procedure_description") or ""
+    procedure_lines = [line.strip() for line in procedure_text.split("\n") if line.strip()]
+    steps = []
+    if procedure_lines:
+        steps = [{"title": f"Step {idx}", "items": [line]} for idx, line in enumerate(procedure_lines, start=1)]
+    else:
+        steps = [{"title": "Step 1", "items": ["Follow the recipe instructions."]}]
+
+    reviews_raw = recipe_row.get("reviews", [])
+    reviews = []
+    for review in reviews_raw:
+        reviews.append({
+            "author": review.get("author") or "User",
+            "rating": int(round(rating_value)) if rating_value else 5,
+            "content": review.get("content") or ""
+        })
+
+    recipe_data = {
+        "id": recipe_row["id"],
+        "title": recipe_row["title"],
+        "rating": rating_value,
+        "rating_count": recipe_row.get("rating_count") or len(reviews),
+        "image": image_path or url_for('static', filename='media/registration.png'),
+        "ingredients": ingredients,
+        "nutrition": nutrition,
+        "stats": stats,
+        "steps": steps,
+        "tags": tags,
+        "reviews": reviews
+    }
+
     return render_template('pages/recipe.html', recipe=recipe_data)
 
 
@@ -123,7 +144,10 @@ def recipe(recipe_id: int):
 def home():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('pages/home.html')
+    recent_recipes = mydb.fetch_recent_recipes()
+    more_recipes = mydb.fetch_more_recipes()
+    popular_recipes = mydb.fetch_popular_recipes()
+    return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
 
 @app.route('/profile', methods=['GET', 'POST'])
 def profile():
@@ -151,7 +175,8 @@ def login():
         password = request.form.get('password', '')
         user_id = authenticate_user(email, password)
         if user_id:
-            app.user_id = user_id
+            session.clear()
+            session.permanent = True
             session['user'] = user_id
             return redirect(url_for('home'))
         return render_template('pages/login.html', error='Invalid email or password.')

@@ -49,9 +49,7 @@
     }
 
     const reset_filters = () => {
-        document.querySelectorAll(".feed-filter-option-input").forEach((input) => {
-            input.checked = false
-        })
+        window.location.href = "{{ url_for('feed') }}"
     }
 
     document.addEventListener("DOMContentLoaded", () => {
@@ -73,91 +71,80 @@
                 Reset
             </button>
         </div>
-        <div class="feed-filter-dropdown">
-            <div class="feed-filter-sub-section">
-                <h3 class="feed-filter-sub-title">Cuisine</h3>
-                <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-1-btn"
-                    type="button" onclick="toggle_subsection('feed-filter-subsection-1')">
-                    <i class="fa-solid fa-angle-right"></i>
-                </button>
+        <form id="feed-filter-form" action="{{ url_for('feed') }}" method="get">
+            <input type="hidden" name="page" value="1">
+            <div class="feed-filter-dropdown">
+                <div class="feed-filter-sub-section">
+                    <h3 class="feed-filter-sub-title">Category</h3>
+                    <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-1-btn"
+                        type="button" onclick="toggle_subsection('feed-filter-subsection-1')">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                </div>
+                <div class="feed-subsection-open" id="feed-filter-subsection-1">
+                    {% for category in filters.categories %}
+                    <label class="feed-filter-option">
+                        <input type="radio" name="category" value="{{ category }}" class="feed-filter-option-input"
+                            {% if active_category == category %}checked{% endif %}>
+                        {{ category }}
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
-            <form class="feed-subsection-open" id="feed-filter-subsection-1">
-                <label class="feed-filter-option">
-                    <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
-                    Italian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
-                    Mexican
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
-                    Indian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="American" name="Cuisine" value="American" class="feed-filter-option-input">
-                    American
-                </label>
-            </form>
-        </div>
 
-        <div class="feed-filter-dropdown">
-            <div class="feed-filter-sub-section">
-                <h3 class="feed-filter-sub-title">Cuisine 2</h3>
-                <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-2-btn"
-                    type="button" onclick="toggle_subsection('feed-filter-subsection-2')">
-                    <i class="fa-solid fa-angle-right"></i>
-                </button>
+            <div class="feed-filter-dropdown">
+                <div class="feed-filter-sub-section">
+                    <h3 class="feed-filter-sub-title">Difficulty</h3>
+                    <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-2-btn"
+                        type="button" onclick="toggle_subsection('feed-filter-subsection-2')">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                </div>
+                <div class="feed-subsection-open" id="feed-filter-subsection-2">
+                    {% for difficulty in filters.difficulties %}
+                    <label class="feed-filter-option">
+                        <input type="radio" name="difficulty" value="{{ difficulty }}" class="feed-filter-option-input"
+                            {% if active_difficulty == difficulty %}checked{% endif %}>
+                        {{ difficulty }}
+                    </label>
+                    {% endfor %}
+                </div>
             </div>
-            <form class="feed-subsection-open" id="feed-filter-subsection-2">
-                <label class="feed-filter-option">
-                    <input type="radio" id="Italian-2" name="Cuisine2" value="Italian" class="feed-filter-option-input">
-                    Italian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Mexican-2" name="Cuisine2" value="Mexican" class="feed-filter-option-input">
-                    Mexican
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Indian-2" name="Cuisine2" value="Indian" class="feed-filter-option-input">
-                    Indian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="American-2" name="Cuisine2" value="American" class="feed-filter-option-input">
-                    American
-                </label>
-            </form>
-        </div>
 
-        <div class="feed-filter-dropdown">
-            <div class="feed-filter-sub-section">
-                <h3 class="feed-filter-sub-title">Cuisine</h3>
-                <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-3-btn"
-                    type="button" onclick="toggle_subsection('feed-filter-subsection-3')">
-                    <i class="fa-solid fa-angle-right"></i>
-                </button>
+            <div class="feed-filter-dropdown">
+                <div class="feed-filter-sub-section">
+                    <h3 class="feed-filter-sub-title">Max Time (minutes)</h3>
+                    <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-3-btn"
+                        type="button" onclick="toggle_subsection('feed-filter-subsection-3')">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </button>
+                </div>
+                <div class="feed-subsection-open" id="feed-filter-subsection-3">
+                    <label class="feed-number-field">
+                        <span>Up to (minutes)</span>
+                        <input type="number" class="feed-number-input" name="max_time" min="0" step="5" value="{{ active_max_time }}">
+                    </label>
+                    <p class="feed-filter-helper">Show recipes that take no longer than this time.</p>
+                </div>
             </div>
-            <form class="feed-subsection-open" id="feed-filter-subsection-3">
-                <label class="feed-filter-option">
-                    <input type="radio" id="Italian-3" name="Cuisine3" value="Italian" class="feed-filter-option-input">
-                    Italian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Mexican-3" name="Cuisine3" value="Mexican" class="feed-filter-option-input">
-                    Mexican
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="Indian-3" name="Cuisine3" value="Indian" class="feed-filter-option-input">
-                    Indian
-                </label>
-                <label class="feed-filter-option">
-                    <input type="radio" id="American-3" name="Cuisine3" value="American" class="feed-filter-option-input">
-                    American
-                </label>
-            </form>
-        </div>
+
+            <button class="feed-reset-btn" type="submit">Apply Filters</button>
+        </form>
     </div>
     <div class="feed-list-page">
+        <div class="feed-pagination feed-pagination-top">
+            {% if prev_page %}
+                <a class="feed-page-btn" href="{{ url_for('feed', page=prev_page, category=active_category, difficulty=active_difficulty, max_time=active_max_time) }}">&larr; Prev</a>
+            {% else %}
+                <span class="feed-page-btn disabled">&larr; Prev</span>
+            {% endif %}
+            <span class="feed-page-status">Page {{ page }} of {{ total_pages }}</span>
+            {% if next_page %}
+                <a class="feed-page-btn" href="{{ url_for('feed', page=next_page, category=active_category, difficulty=active_difficulty, max_time=active_max_time) }}">Next &rarr;</a>
+            {% else %}
+                <span class="feed-page-btn disabled">Next &rarr;</span>
+            {% endif %}
+        </div>
         <div class="feed-list-actions">
             <button class="feed-mobile-filter-btn feed-filter-toggle-btn dropdown-btn-open" id="feed-filter-toggle-mobile" type="button"
                 onclick="filter_handler()">
@@ -165,23 +152,55 @@
                 Filters
             </button>
         </div>
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
-        {% set template = './components/feedcard.html' %} {% include template %}
+        {% if recipes and recipes|length > 0 %}
+            {% for recipe in recipes %}
+                <a class="recipe-card" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
+                    <div class="recipe-card__image-wrapper">
+                        <img
+                            class="recipe-card__image"
+                            src="{{ recipe.image or card_image }}"
+                            alt="{{ recipe.title }}"
+                        >
+                        <button class="recipe-card__favorite" type="button" aria-label="Save {{ recipe.title }}">
+                            <svg class="recipe-card__favorite-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                    d="M12.1 20.3a1 1 0 0 1-1.2 0C6.1 16.9 3 13.9 3 10.2 3 7.5 5.2 5 8.3 5c1.5 0 2.9.7 3.7 1.9C12.9 5.7 14.3 5 15.8 5 19 5 21 7.5 21 10.2c0 3.7-3.1 6.7-7.9 10.1z"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.7"
+                                />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="recipe-card__body">
+                        <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+                        <p class="recipe-card__author">{{ recipe.prepare_time or 0 }} min</p>
+                        <div class="recipe-card__rating" aria-label="Rated {{ recipe.rating or 0 }} out of five stars">
+                            {% set rating_int = (recipe.rating or 0)|int %}
+                            {% for _ in range(0, 5) %}
+                                <span class="rating-star {% if loop.index <= rating_int %}is-filled{% endif %}"></span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        {% else %}
+            <p>No recipes found for these filters.</p>
+        {% endif %}
+
+        <div class="feed-pagination feed-pagination-bottom">
+            {% if prev_page %}
+                <a class="feed-page-btn" href="{{ url_for('feed', page=prev_page, category=active_category, difficulty=active_difficulty, max_time=active_max_time) }}">&larr; Prev</a>
+            {% else %}
+                <span class="feed-page-btn disabled">&larr; Prev</span>
+            {% endif %}
+            <span class="feed-page-status">Page {{ page }} of {{ total_pages }}</span>
+            {% if next_page %}
+                <a class="feed-page-btn" href="{{ url_for('feed', page=next_page, category=active_category, difficulty=active_difficulty, max_time=active_max_time) }}">Next &rarr;</a>
+            {% else %}
+                <span class="feed-page-btn disabled">Next &rarr;</span>
+            {% endif %}
+        </div>
     </div>
 
 

@@ -78,7 +78,7 @@ body {
 .retsept-list-img {
   width: 12vw;
   height: 12vw;
-  border: none;
+  border: 2px solid #e6e6e6;
   border-radius: 6vw;
   margin: 0px;
   object-fit: cover;
