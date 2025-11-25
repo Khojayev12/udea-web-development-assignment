@@ -44,6 +44,81 @@ def feed():
     return render_template('pages/feed.html')
 
 
+@app.route('/recipe/<int:recipe_id>')
+def recipe(recipe_id: int):
+    recipe_data = {
+        "id": recipe_id,
+        "title": "Chicken Pasta",
+        "rating": 4.5,
+        "rating_count": 146,
+        "image": url_for('static', filename='media/registration.png'),
+        "ingredients": [
+            "225g fettuccine or any pasta of your choice",
+            "450g boneless, skinless chicken breasts, cut into bite-sized pieces",
+            "salt",
+            "black pepper",
+            "2 tablespoons olive oil",
+            "3 cloves garlic, minced",
+            "240ml heavy cream",
+            "100g grated parmesan cheese",
+            "fresh parsley, chopped (for garnish)",
+            "tomato, chopped (for garnish)",
+        ],
+        "nutrition": [
+            {"label": "Protein", "value": "45g"},
+            {"label": "Carbs", "value": "50g"},
+            {"label": "Fats", "value": "40g"},
+            {"label": "Sugar", "value": "2g"},
+            {"label": "Fiber", "value": "3g"},
+        ],
+        "stats": [
+            {"label": "Ingredients", "value": "8"},
+            {"label": "Minutes", "value": "15"},
+            {"label": "Calories", "value": "720"},
+        ],
+        "steps": [
+            {
+                "title": "Cook the Pasta",
+                "items": [
+                    "Cook the pasta according to the package instructions. Drain and set aside.",
+                ],
+            },
+            {
+                "title": "Cook the Chicken",
+                "items": [
+                    "Season chicken pieces with salt and pepper.",
+                    "In a pan, heat olive oil over medium heat.",
+                    "Add chicken and cook until browned and fully cooked. Set aside.",
+                ],
+            },
+            {
+                "title": "Make the Alfredo Sauce",
+                "items": [
+                    "In the same pan, add minced garlic and sauté for 1 minute.",
+                    "Pour in the heavy cream and bring to a gentle simmer.",
+                    "Stir in Parmesan cheese until melted and the sauce is smooth.",
+                ],
+            },
+            {
+                "title": "Combine and Serve",
+                "items": [
+                    "Add the cooked chicken to the sauce.",
+                    "Toss in the cooked pasta until well coated.",
+                    "Garnish with chopped parsley.",
+                    "Enjoy your quick and tasty Easy Chicken Alfredo Pasta!",
+                ],
+            },
+        ],
+        "tags": ["pasta", "chicken pasta", "pasta recipe", "creamy pasta", "homemade dinner", "quick & easy"],
+        "reviews": [
+            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit. Et sollicitudin quis cras tellus. Nam tristique faucibus ultrices sit dictum senectus."},
+            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit. Et sollicitudin quis cras tellus. Nam tristique faucibus ultrices sit dictum senectus. Quam sed pulvinar ipsum tortor vulputate quis mattis."},
+            {"author": "Name", "rating": 5, "content": "Lorem ipsum dolor sit amet consectetur. Fusce orci elementum eu tortor blandit."},
+        ],
+    }
+    return render_template('pages/recipe.html', recipe=recipe_data)
+
+
 @app.route('/home', methods=['GET', 'POST'])
 def home():
     if 'user' not in session:

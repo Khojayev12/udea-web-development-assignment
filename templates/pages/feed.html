@@ -4,61 +4,100 @@
 {% set card_image = url_for('static', filename='media/registration.png') %}
 <script>
     let filter_status = "open"
-    let filter_subsections_statue = {
-        "feed-filter-subsection-1": 'open',
+    const filter_subsections_state = {
+        "feed-filter-subsection-1": "open",
         "feed-filter-subsection-2": "open",
         "feed-filter-subsection-3": "open"
     }
-    const close_subsection = (section_id) => {
-        var current_state = filter_subsections_statue[section_id]
-        if (current_state == 'open') {
-            document.getElementById(section_id).className = "feed-subsection-close ";
-            document.getElementById(section_id + "-btn").className = "feed-filter-subsection-btn dropdown-btn-close";
-            filter_subsections_statue[section_id] = "close"
+
+    const set_filter_state = (is_open) => {
+        const filter_section = document.getElementById("filter-section")
+        const toggle_buttons = document.querySelectorAll(".feed-filter-toggle-btn")
+        if (!filter_section) {
+            return
         }
-        else {
-            document.getElementById(section_id).className = "feed-subsection-open";
-            document.getElementById(section_id + "-btn").className = "feed-filter-subsection-btn dropdown-btn-open";
-            filter_subsections_statue[section_id] = "open"
-        }
+        filter_status = is_open ? "open" : "close"
+        filter_section.classList.toggle("filters-open", is_open)
+        filter_section.classList.toggle("filters-close", !is_open)
+        toggle_buttons.forEach((button) => {
+            button.classList.toggle("dropdown-btn-open", is_open)
+            button.classList.toggle("dropdown-btn-close", !is_open)
+            button.setAttribute("aria-expanded", is_open)
+        })
     }
 
     const filter_handler = () => {
-        if (filter_status == 'open') {
-            document.getElementById("filter-section").className = "feed-filters-pane filters-close";
-            filter_status = "close"
-        }
-        else {
-            document.getElementById("filter-section").className = "feed-filters-pane filters-open";
-            filter_status = "open"
-        }
+        set_filter_state(filter_status !== "open")
     }
+
+    const toggle_subsection = (section_id) => {
+        const current_state = filter_subsections_state[section_id] === "open"
+        const section = document.getElementById(section_id)
+        const button = document.getElementById(section_id + "-btn")
+        const next_state = current_state ? "close" : "open"
+
+        if (!section || !button) {
+            return
+        }
+
+        section.classList.toggle("feed-subsection-open", next_state === "open")
+        section.classList.toggle("feed-subsection-close", next_state === "close")
+        button.classList.toggle("dropdown-btn-open", next_state === "open")
+        button.classList.toggle("dropdown-btn-close", next_state === "close")
+
+        filter_subsections_state[section_id] = next_state
+    }
+
+    const reset_filters = () => {
+        document.querySelectorAll(".feed-filter-option-input").forEach((input) => {
+            input.checked = false
+        })
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const should_open = !window.matchMedia("(max-width: 960px)").matches
+        set_filter_state(should_open)
+    })
 </script>
 <div class="feed-page">
     <div class="feed-filters-pane filters-open" id="filter-section">
-        <h2 class="feed-filter-title">Filters
-            <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-1-btn"
-                onclick="filter_handler()">
-                <i class="fa-solid fa-angle-right"></i>
+        <div class="feed-filter-header">
+            <h2 class="feed-filter-title">Filters</h2>
+            <button class="feed-filter-subsection-btn feed-filter-toggle-btn dropdown-btn-open" id="feed-filter-toggle-btn"
+                type="button" onclick="filter_handler()">
+                <i class="fa-solid fa-xmark"></i>
             </button>
-        </h2>
+        </div>
+        <div class="feed-filter-actions">
+            <button class="feed-reset-btn" type="button" onclick="reset_filters()">
+                Reset
+            </button>
+        </div>
         <div class="feed-filter-dropdown">
             <div class="feed-filter-sub-section">
                 <h3 class="feed-filter-sub-title">Cuisine</h3>
                 <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-1-btn"
-                    onclick="close_subsection('feed-filter-subsection-1')">
+                    type="button" onclick="toggle_subsection('feed-filter-subsection-1')">
                     <i class="fa-solid fa-angle-right"></i>
                 </button>
             </div>
             <form class="feed-subsection-open" id="feed-filter-subsection-1">
-                <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
-                <label for="Italian" class="feed-filter-option">Italian</label><br>
-                <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
-                <label for="Mexican" class="feed-filter-option">Mexican</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
-                <label for="Indian" class="feed-filter-option">Indian</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="American" class="feed-filter-option-input">
-                <label for="American" class="feed-filter-option">American</label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
+                    Italian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
+                    Mexican
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
+                    Indian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="American" name="Cuisine" value="American" class="feed-filter-option-input">
+                    American
+                </label>
             </form>
         </div>
 
@@ -66,19 +105,27 @@
             <div class="feed-filter-sub-section">
                 <h3 class="feed-filter-sub-title">Cuisine 2</h3>
                 <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-2-btn"
-                    onclick="close_subsection('feed-filter-subsection-2')">
+                    type="button" onclick="toggle_subsection('feed-filter-subsection-2')">
                     <i class="fa-solid fa-angle-right"></i>
                 </button>
             </div>
             <form class="feed-subsection-open" id="feed-filter-subsection-2">
-                <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
-                <label for="Italian" class="feed-filter-option">Italian</label><br>
-                <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
-                <label for="Mexican" class="feed-filter-option">Mexican</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
-                <label for="Indian" class="feed-filter-option">Indian</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="American" class="feed-filter-option-input">
-                <label for="American" class="feed-filter-option">American</label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Italian-2" name="Cuisine2" value="Italian" class="feed-filter-option-input">
+                    Italian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Mexican-2" name="Cuisine2" value="Mexican" class="feed-filter-option-input">
+                    Mexican
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Indian-2" name="Cuisine2" value="Indian" class="feed-filter-option-input">
+                    Indian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="American-2" name="Cuisine2" value="American" class="feed-filter-option-input">
+                    American
+                </label>
             </form>
         </div>
 
@@ -86,23 +133,38 @@
             <div class="feed-filter-sub-section">
                 <h3 class="feed-filter-sub-title">Cuisine</h3>
                 <button class="feed-filter-subsection-btn dropdown-btn-open" id="feed-filter-subsection-3-btn"
-                    onclick="close_subsection('feed-filter-subsection-3')">
+                    type="button" onclick="toggle_subsection('feed-filter-subsection-3')">
                     <i class="fa-solid fa-angle-right"></i>
                 </button>
             </div>
             <form class="feed-subsection-open" id="feed-filter-subsection-3">
-                <input type="radio" id="Italian" name="Cuisine" value="Italian" class="feed-filter-option-input">
-                <label for="Italian" class="feed-filter-option">Italian</label><br>
-                <input type="radio" id="Mexican" name="Cuisine" value="Mexican" class="feed-filter-option-input">
-                <label for="Mexican" class="feed-filter-option">Mexican</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="Indian" class="feed-filter-option-input">
-                <label for="Indian" class="feed-filter-option">Indian</label><br>
-                <input type="radio" id="Indian" name="Cuisine" value="American" class="feed-filter-option-input">
-                <label for="American" class="feed-filter-option">American</label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Italian-3" name="Cuisine3" value="Italian" class="feed-filter-option-input">
+                    Italian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Mexican-3" name="Cuisine3" value="Mexican" class="feed-filter-option-input">
+                    Mexican
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="Indian-3" name="Cuisine3" value="Indian" class="feed-filter-option-input">
+                    Indian
+                </label>
+                <label class="feed-filter-option">
+                    <input type="radio" id="American-3" name="Cuisine3" value="American" class="feed-filter-option-input">
+                    American
+                </label>
             </form>
         </div>
     </div>
     <div class="feed-list-page">
+        <div class="feed-list-actions">
+            <button class="feed-mobile-filter-btn feed-filter-toggle-btn dropdown-btn-open" id="feed-filter-toggle-mobile" type="button"
+                onclick="filter_handler()">
+                <i class="fa-solid fa-sliders"></i>
+                Filters
+            </button>
+        </div>
         {% set template = './components/feedcard.html' %} {% include template %}
         {% set template = './components/feedcard.html' %} {% include template %}
         {% set template = './components/feedcard.html' %} {% include template %}

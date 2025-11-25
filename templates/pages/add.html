@@ -1,9 +1,172 @@
 {% extends 'layout.html' %}
 
 {% block body%}
+<div class="add-page">
+    <div class="add-header">
+        <h1 class="add-title">Add Recipe</h1>
+    </div>
+    <form class="add-form" action="{{ url_for('add') }}" method="post" enctype="multipart/form-data">
+        <div class="add-field">
+            <label class="add-label" for="photos">Photos</label>
+            <div class="add-photo-drop">
+                <p class="add-helper">Upload up to 5 photos</p>
+                <label class="add-photo-btn" for="photos">Select photos</label>
+                <input id="photos" name="photos[]" type="file" accept="image/*" multiple style="display:none" />
+            </div>
+        </div>
 
-<div class="feed-page">
-add recipe page
+        <div class="add-field">
+            <label class="add-label" for="title">Recipe Name</label>
+            <input class="add-input" id="title" name="title" type="text" placeholder="What do you call your recipe?" required>
+        </div>
 
+        <div class="add-field">
+            <label class="add-label">Ingredients</label>
+            <div class="add-list" id="ingredients-list">
+                <div class="add-list-item">
+                    <input class="add-input" name="ingredients[]" type="text" placeholder="e.g., 225g pasta" required>
+                    <button class="add-remove-btn" type="button" aria-label="Remove ingredient">&minus;</button>
+                </div>
+            </div>
+            <button class="add-plus-btn" type="button" id="add-ingredient">+</button>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label">Procedure</label>
+            <div class="add-list" id="steps-list">
+                <div class="add-list-item">
+                    <input class="add-input" name="steps[]" type="text" placeholder="Describe a step" required>
+                    <button class="add-remove-btn" type="button" aria-label="Remove step">&minus;</button>
+                </div>
+            </div>
+            <button class="add-plus-btn" type="button" id="add-step">+</button>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label">Recipe Stats</label>
+            <div class="add-grid-3">
+                <input class="add-number" name="ingredients_count" type="number" min="0" placeholder="Ingredients count" required>
+                <input class="add-number" name="prep_minutes" type="number" min="0" placeholder="Minutes" required>
+                <input class="add-number" name="calories" type="number" min="0" placeholder="Calories" required>
+            </div>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label">Nutrition</label>
+            <div class="add-list" id="nutrition-list">
+                <div class="add-list-item">
+                    <input class="add-small-input" name="nutrition_label[]" type="text" placeholder="Label (e.g., Protein)" required>
+                    <input class="add-small-input" name="nutrition_value[]" type="text" placeholder="Value (e.g., 45g)" required>
+                    <button class="add-remove-btn" type="button" aria-label="Remove nutrition">&minus;</button>
+                </div>
+            </div>
+            <button class="add-plus-btn" type="button" id="add-nutrition">+</button>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label">Recipe Tags</label>
+            <div class="add-pill-row">
+                <input class="add-input" id="tag-input" type="text" placeholder="Add a tag">
+                <button class="add-plus-btn" type="button" id="add-tag">+</button>
+            </div>
+            <div class="add-tags" id="tags-container"></div>
+            <input type="hidden" name="tags_serialized" id="tags-serialized">
+        </div>
+
+        <button class="add-submit" type="submit">Post Recipe</button>
+    </form>
 </div>
+
+<script>
+    const templateRow = (name) => {
+        const wrapper = document.createElement('div')
+        wrapper.className = 'add-list-item'
+        if (name === 'ingredients') {
+            wrapper.innerHTML = `
+                <input class="add-input" name="ingredients[]" type="text" placeholder="e.g., 225g pasta" required>
+                <button class="add-remove-btn" type="button" aria-label="Remove ingredient">&minus;</button>
+            `
+        } else if (name === 'steps') {
+            wrapper.innerHTML = `
+                <input class="add-input" name="steps[]" type="text" placeholder="Describe a step" required>
+                <button class="add-remove-btn" type="button" aria-label="Remove step">&minus;</button>
+            `
+        } else {
+            wrapper.innerHTML = `
+                <input class="add-small-input" name="nutrition_label[]" type="text" placeholder="Label (e.g., Protein)" required>
+                <input class="add-small-input" name="nutrition_value[]" type="text" placeholder="Value (e.g., 45g)" required>
+                <button class="add-remove-btn" type="button" aria-label="Remove nutrition">&minus;</button>
+            `
+        }
+        return wrapper
+    }
+
+    const addIngredientBtn = document.getElementById('add-ingredient')
+    const ingredientsList = document.getElementById('ingredients-list')
+    addIngredientBtn.addEventListener('click', () => {
+        ingredientsList.appendChild(templateRow('ingredients'))
+    })
+
+    const addStepBtn = document.getElementById('add-step')
+    const stepsList = document.getElementById('steps-list')
+    addStepBtn.addEventListener('click', () => {
+        stepsList.appendChild(templateRow('steps'))
+    })
+
+    const addNutritionBtn = document.getElementById('add-nutrition')
+    const nutritionList = document.getElementById('nutrition-list')
+    addNutritionBtn.addEventListener('click', () => {
+        nutritionList.appendChild(templateRow('nutrition'))
+    })
+
+    document.querySelectorAll('.add-list').forEach((listEl) => {
+        listEl.addEventListener('click', (event) => {
+            if (event.target.classList.contains('add-remove-btn')) {
+                const parentList = event.currentTarget
+                const items = parentList.querySelectorAll('.add-list-item')
+                if (items.length > 1) {
+                    event.target.closest('.add-list-item').remove()
+                }
+            }
+        })
+    })
+
+    const tagsContainer = document.getElementById('tags-container')
+    const tagsSerialized = document.getElementById('tags-serialized')
+    const tagInput = document.getElementById('tag-input')
+    const addTagBtn = document.getElementById('add-tag')
+    let tags = []
+
+    const renderTags = () => {
+        tagsContainer.innerHTML = ''
+        tags.forEach((tag, index) => {
+            const pill = document.createElement('span')
+            pill.className = 'add-tag'
+            pill.innerHTML = `${tag} <button type="button" data-index="${index}">&times;</button>`
+            tagsContainer.appendChild(pill)
+            const hidden = document.createElement('input')
+            hidden.type = 'hidden'
+            hidden.name = 'tags[]'
+            hidden.value = tag
+            tagsContainer.appendChild(hidden)
+        })
+        tagsSerialized.value = JSON.stringify(tags)
+    }
+
+    addTagBtn.addEventListener('click', () => {
+        const value = tagInput.value.trim()
+        if (value) {
+            tags.push(value)
+            tagInput.value = ''
+            renderTags()
+        }
+    })
+
+    tagsContainer.addEventListener('click', (event) => {
+        if (event.target.dataset.index) {
+            tags.splice(Number(event.target.dataset.index), 1)
+            renderTags()
+        }
+    })
+</script>
 {% endblock %}

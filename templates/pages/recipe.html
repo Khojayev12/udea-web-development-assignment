@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+{% set image_src = recipe.image if recipe and recipe.image else url_for('static', filename='media/registration.png') %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/recipe.css') }}">
+<div class="recipe-page">
+    <section class="recipe-hero">
+        <div class="recipe-hero-left">
+            <p class="recipe-meta">Recipe Info</p>
+            <h1 class="recipe-title">{{ recipe.title }}</h1>
+            <div class="recipe-rating">
+                {% set full_stars = recipe.rating|int %}
+                {% set has_half = (recipe.rating - full_stars) >= 0.5 %}
+                <div class="recipe-stars" aria-label="Rated {{ recipe.rating|round(1) }} out of 5">
+                    {% for i in range(1, 6) %}
+                        {% if i <= full_stars %}
+                            <i class="fa-solid fa-star recipe-star"></i>
+                        {% elif has_half and i == full_stars + 1 %}
+                            <i class="fa-solid fa-star-half-stroke recipe-star"></i>
+                        {% else %}
+                            <i class="fa-regular fa-star recipe-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <span class="recipe-rating-count">({{ recipe.rating_count }})</span>
+            </div>
+            <div class="recipe-stats">
+                {% for stat in recipe.stats %}
+                    <div class="recipe-stat-card">
+                        <div class="recipe-stat-value">{{ stat.value }}</div>
+                        <div class="recipe-stat-label">{{ stat.label }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="recipe-hero-nutrition">
+                <h3 class="recipe-hero-nutrition-title">Nutrition</h3>
+                <div class="recipe-nutrition">
+                    {% for item in recipe.nutrition %}
+                        <div class="recipe-chip">
+                            <span class="recipe-chip-value">{{ item.value }}</span>
+                            <span class="recipe-chip-label">{{ item.label }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="recipe-hero-right">
+            <img src="{{ image_src }}" alt="{{ recipe.title }} image" class="recipe-hero-image">
+        </div>
+    </section>
+
+    <section class="recipe-section">
+        <h3 class="recipe-section-title">Ingredients</h3>
+        <ul class="recipe-ingredients">
+            {% for ingredient in recipe.ingredients %}
+                <li>{{ ingredient }}</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section class="recipe-section">
+        <h3 class="recipe-section-title">Procedure</h3>
+        <ol class="recipe-steps">
+            {% for step in recipe.steps %}
+                <li>
+                    <span class="recipe-step-title">{{ step.title }}:</span>
+                    <ul>
+                        {% for item in step['items'] %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+
+    <section class="recipe-section">
+        <h3 class="recipe-section-title">Recipe Tags</h3>
+        <div class="recipe-tags">
+            {% for tag in recipe.tags %}
+                <span class="recipe-tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="recipe-section">
+        <h3 class="recipe-section-title">Reviews</h3>
+        <div class="recipe-review add-review">
+            <div class="recipe-review-avatar">
+                <i class="fa-regular fa-circle-user"></i>
+            </div>
+            <div class="recipe-review-body">
+                <p class="recipe-review-title">Add A Review</p>
+            </div>
+        </div>
+        {% for review in recipe.reviews %}
+            <div class="recipe-review">
+                <div class="recipe-review-avatar">
+                    <i class="fa-regular fa-circle-user"></i>
+                </div>
+                <div class="recipe-review-body">
+                    <p class="recipe-review-author">{{ review.author }}</p>
+                    <div class="recipe-review-stars">
+                        {% for _ in range(0, review.rating) %}
+                            <i class="fa-solid fa-star"></i>
+                        {% endfor %}
+                    </div>
+                    <p class="recipe-review-text">{{ review.content }}</p>
+                </div>
+            </div>
+            {% if not loop.last %}
+                <hr class="recipe-divider">
+            {% endif %}
+        {% endfor %}
+    </section>
+
+    <section class="recipe-section">
+        <h3 class="recipe-section-title">You May Also Like</h3>
+        <div class="recipe-recommendations">
+            {% for _ in range(0, 4) %}
+                <div class="recipe-recommendation-card">
+                    {% set template = './components/feedcard.html' %} {% include template %}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -2,76 +2,194 @@
   display: flex;
   position: relative;
   justify-content: center;
-  padding: 48px 16px;
+  align-items: flex-start;
+  gap: 24px;
+  padding: 48px 16px 80px;
   margin-top: 100px;
   background-color: #f6f6f6;
+  flex-wrap: nowrap;
 }
 .feed-filters-pane {
-  font-family: 'Montserrat';
-  padding-left: 20px;
-  padding-right: 20px;
+  font-family: "Montserrat", sans-serif;
+  width: 320px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 16px;
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
+  padding: 20px 22px;
+  overflow: hidden;
+  position: sticky;
+  top: 120px;
+  max-height: 1200px;
+  transition: width 0.3s ease, padding 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease,
+    border-color 0.3s ease, max-height 0.3s ease;
 }
-.filters-open{
-  width: 300px;
+.filters-open {
+  opacity: 1;
 }
-.filters-close{
-  width: 0px;
+.filters-close {
+  width: 0;
+  padding: 0;
+  opacity: 0;
+  border-color: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  max-height: 0;
 }
-.feed-filter-title{
-  font-weight: 600;
-  font-size: 32px;
-}
-
-.feed-filter-sub-section{
+.feed-filter-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
 }
-.feed-filter-sub-title{
-  font-size: 24px;
+.feed-filter-title {
+  font-weight: 600;
+  font-size: 28px;
+  margin: 0;
 }
-.feed-filter-subsection-btn{
-  background-color: #f6f6f6;
-  border: none;
-  font-size: 24px;
-  font-style: bold;
-  transform: 0.3s;
-  width: 30px;
-  height: 30px;
-  border-radius: 15px;
-
+.feed-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
 }
-.feed-filter-option{
+.feed-reset-btn {
+  font-family: "Montserrat", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 14px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.feed-reset-btn:hover {
+  background-color: #f8f8f8;
+  box-shadow: 0px 14px 28px rgba(0, 0, 0, 0.1);
+}
+.feed-reset-btn:focus-visible {
+  outline: 2px solid #ebc76b;
+  outline-offset: 2px;
+}
+.feed-filter-dropdown {
+  padding: 14px 0;
+  border-top: 1px solid #ededed;
+}
+.feed-filter-dropdown:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+.feed-filter-sub-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.feed-filter-sub-title {
+  font-size: 18px;
+  margin: 0;
+}
+.feed-filter-subsection-btn {
+  background-color: #ffffff;
+  border: 1px solid #e6e6e6;
+  font-size: 18px;
+  font-style: normal;
+  transition: transform 0.3s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #111214;
+  cursor: pointer;
+}
+.feed-filter-subsection-btn:hover {
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
+  background-color: #f8f8f8;
+}
+.feed-filter-subsection-btn:focus-visible {
+  outline: 2px solid #ebc76b;
+  outline-offset: 2px;
+}
+.feed-filter-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 500;
-  font-size: 20px;
+  font-size: 16px;
+  margin: 8px 0;
+  color: #111214;
 }
-.feed-subsection-close{
+.feed-subsection-close {
   display: none;
 }
-.feed-subsection-open{
+.feed-subsection-open {
   display: block;
 }
-
-.dropdown-btn-close{
-  transform: rotate(0deg);
+.dropdown-btn-close {
+  transform: none;
 }
-
-.dropdown-btn-open{
+.dropdown-btn-open {
+  transform: none;
+}
+.feed-filter-toggle-btn i,
+.feed-filter-subsection-btn i {
+  transition: transform 0.3s ease;
+}
+.feed-filter-toggle-btn.dropdown-btn-open i,
+.feed-filter-subsection-btn.dropdown-btn-open i {
   transform: rotate(90deg);
 }
-
-.feed-filter-option-input{
+.feed-filter-toggle-btn.dropdown-btn-close i,
+.feed-filter-subsection-btn.dropdown-btn-close i {
+  transform: rotate(0deg);
+}
+#feed-filter-toggle-mobile.dropdown-btn-open i,
+#feed-filter-toggle-mobile.dropdown-btn-close i {
+  transform: none;
+}
+#feed-filter-toggle-btn.dropdown-btn-open i,
+#feed-filter-toggle-btn.dropdown-btn-close i {
+  transform: none;
+}
+.feed-filter-option-input {
   width: 16px;
   height: 16px;
-}
-.feed-filter-subsection-btn:hover{
-  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
+  accent-color: #ebc76b;
 }
 .feed-list-page {
-  width: calc(100% - 340px);
+  flex: 1;
+  width: 100%;
   display: flex;
   justify-content: space-around;
   flex-wrap: wrap;
+  gap: 16px;
+}
+.feed-list-actions {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.feed-mobile-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 12px 16px;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  background-color: #ffffff;
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+.feed-mobile-filter-btn i {
+  font-size: 16px;
 }
 .recipe-card {
   margin-top: 20px;
@@ -176,4 +294,65 @@
 
 .rating-star.is-filled {
   background-color: #f4c150;
+}
+
+@media (max-width: 1280px) {
+  .feed-page {
+    padding: 32px 12px 72px;
+  }
+  .feed-filters-pane {
+    width: 280px;
+  }
+}
+
+@media (max-width: 960px) {
+  .feed-page {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .feed-filters-pane {
+    width: 100%;
+    position: relative;
+    top: 0;
+  }
+  .filters-close {
+    width: 0;
+    padding: 0;
+    max-height: 0;
+    margin: 0;
+  }
+  .feed-list-actions {
+    justify-content: flex-start;
+  }
+  .feed-mobile-filter-btn {
+    display: inline-flex;
+  }
+  .feed-list-page {
+    justify-content: center;
+  }
+  .recipe-card {
+    width: 45%;
+    max-width: 360px;
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 640px) {
+  .feed-page {
+    padding: 24px 12px 56px;
+  }
+  .feed-filter-title {
+    font-size: 24px;
+  }
+  .feed-filter-sub-title {
+    font-size: 16px;
+  }
+  .feed-filter-option {
+    font-size: 15px;
+  }
+  .recipe-card {
+    width: 100%;
+    max-width: 340px;
+  }
 }
