@@ -94,15 +94,17 @@ class DBHandler():
     def fetch_recipe_detail(self, recipe_id: int):
         """Return full recipe details for a given recipe_id."""
         recipe_query = """
-            select recipe_id, title, rating, cover_img_path, prepare_time, calories,
+            select recipe_id, title, category, difficulty, rating, cover_img_path, prepare_time, calories,
                    protein, carbs, fats, sugar, fiber, procedure_description
-            from Recipes
-            where recipe_id = %s
+                   , author_id,
+                   (select concat_ws(' ', u.name, u.surname) from Users u where u.user_id = r.author_id) as author_name
+            from Recipes r
+            where r.recipe_id = %s
         """
         ing_query = "select ingredient from Ingredients where recipe_id = %s order by ingredient_id"
         tag_query = "select tag_name from Tags where recipe_id = %s order by tag_id"
         review_query = """
-            select coalesce(u.name, 'User') as name, coalesce(u.surname, '') as surname, r.comment
+            select coalesce(u.name, 'User') as name, coalesce(u.surname, '') as surname, r.comment, r.rating
             from Ratings r
             left join Users u on r.user_id = u.user_id
             where r.recipe_id = %s
@@ -127,23 +129,28 @@ class DBHandler():
             recipe = {
                 "id": recipe_row[0],
                 "title": recipe_row[1],
-                "rating": recipe_row[2],
-                "cover_img_path": recipe_row[3],
-                "prepare_time": recipe_row[4],
-                "calories": recipe_row[5],
-                "protein": recipe_row[6],
-                "carbs": recipe_row[7],
-                "fats": recipe_row[8],
-                "sugar": recipe_row[9],
-                "fiber": recipe_row[10],
-                "procedure_description": recipe_row[11] or "",
+                "category": recipe_row[2],
+                "difficulty": recipe_row[3],
+                "rating": recipe_row[4],
+                "cover_img_path": recipe_row[5],
+                "prepare_time": recipe_row[6],
+                "calories": recipe_row[7],
+                "protein": recipe_row[8],
+                "carbs": recipe_row[9],
+                "fats": recipe_row[10],
+                "sugar": recipe_row[11],
+                "fiber": recipe_row[12],
+                "procedure_description": recipe_row[13] or "",
+                "author_id": recipe_row[14],
+                "author_name": recipe_row[15] or "User",
                 "ingredients": [row[0] for row in ing_rows],
                 "tags": [row[0] for row in tag_rows],
                 "reviews": [
                     {
                         "author": (row[0] + (" " + row[1] if row[1] else "")).strip(),
-                        "content": row[2]
-                    } for row in review_rows if row[2]
+                        "content": row[2],
+                        "rating": row[3] or 0
+                    } for row in review_rows if row[2] or row[3] is not None
                 ],
             }
             recipe["rating_count"] = len(review_rows)
@@ -338,6 +345,37 @@ class DBHandler():
         except Error as err:
             print("Failed to fetch liked recipes:", err)
             return []
+
+    def has_user_liked_recipe(self, user_id: int, recipe_id: int):
+        query = "select 1 from Likes where user_id = %s and recipe_id = %s limit 1"
+        try:
+            self.cursor.execute(query, (user_id, recipe_id))
+            return self.cursor.fetchone() is not None
+        except Error as err:
+            print("Failed to check like:", err)
+            return False
+
+    def add_recipe_like(self, user_id: int, recipe_id: int):
+        query = "insert ignore into Likes (recipe_id, user_id) values (%s, %s)"
+        try:
+            self.cursor.execute(query, (recipe_id, user_id))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to like recipe:", err)
+            self.cnx.rollback()
+            return False
+
+    def remove_recipe_like(self, user_id: int, recipe_id: int):
+        query = "delete from Likes where recipe_id = %s and user_id = %s"
+        try:
+            self.cursor.execute(query, (recipe_id, user_id))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to unlike recipe:", err)
+            self.cnx.rollback()
+            return False
 
     def is_following_user(self, target_user_id: int, follower_id: int):
         query = "select 1 from Followers where user_id = %s and follower_id = %s limit 1"

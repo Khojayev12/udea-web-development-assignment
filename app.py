@@ -77,7 +77,7 @@ def feed():
     )
 
 
-@app.route('/recipe/<int:recipe_id>')
+@app.route('/recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe(recipe_id: int):
     recipe_row = mydb.fetch_recipe_detail(recipe_id)
     if not recipe_row:
@@ -87,6 +87,39 @@ def recipe(recipe_id: int):
     rating_value = float(recipe_row.get("rating") or 0)
     ingredients = recipe_row.get("ingredients", [])
     tags = recipe_row.get("tags", [])
+    session_user = session.get('user')
+    is_favorited = False
+    if session_user:
+        is_favorited = mydb.has_user_liked_recipe(session_user, recipe_id)
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'toggle_favorite':
+            if not session_user:
+                return redirect(url_for('login'))
+            if is_favorited:
+                mydb.remove_recipe_like(session_user, recipe_id)
+            else:
+                mydb.add_recipe_like(session_user, recipe_id)
+        elif action == 'add_review':
+            if not session_user:
+                return redirect(url_for('login'))
+            rating = request.form.get('rating')
+            comment = request.form.get('comment', '')
+            if rating and rating.isdigit():
+                rating_val = int(rating)
+                if 1 <= rating_val <= 5:
+                    try:
+                        mydb.cursor.execute(
+                            "insert into Ratings (recipe_id, user_id, rating, comment) values (%s, %s, %s, %s)",
+                            (recipe_id, session_user, rating_val, comment)
+                        )
+                        mydb.cnx.commit()
+                    except Exception as err:
+                        print("Failed to add review:", err)
+            return redirect(url_for('recipe', recipe_id=recipe_id))
+
+        return redirect(url_for('recipe', recipe_id=recipe_id))
 
     nutrition = []
     nutrition_map = {
@@ -119,22 +152,27 @@ def recipe(recipe_id: int):
     for review in reviews_raw:
         reviews.append({
             "author": review.get("author") or "User",
-            "rating": int(round(rating_value)) if rating_value else 5,
+            "rating": int(round(review.get("rating"))) if review.get("rating") else 5,
             "content": review.get("content") or ""
         })
 
     recipe_data = {
         "id": recipe_row["id"],
         "title": recipe_row["title"],
+        "category":recipe_row["category"],
+        "difficulty":recipe_row["difficulty"],
         "rating": rating_value,
         "rating_count": recipe_row.get("rating_count") or len(reviews),
         "image": image_path or url_for('static', filename='media/registration.png'),
+        "author_id": recipe_row.get("author_id"),
+        "author_name": recipe_row.get("author_name"),
         "ingredients": ingredients,
         "nutrition": nutrition,
         "stats": stats,
         "steps": steps,
         "tags": tags,
-        "reviews": reviews
+        "reviews": reviews,
+        "is_favorited": is_favorited
     }
 
     return render_template('pages/recipe.html', recipe=recipe_data)

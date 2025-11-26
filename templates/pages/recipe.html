@@ -7,7 +7,26 @@
     <section class="recipe-hero">
         <div class="recipe-hero-left">
             <p class="recipe-meta">Recipe Info</p>
-            <h1 class="recipe-title">{{ recipe.title }}</h1>
+            <div class="recipe-title-row">
+                <h1 class="recipe-title">{{ recipe.title }}</h1>
+                <form action="{{ url_for('recipe', recipe_id=recipe.id) }}" method="post" class="recipe-favorite-form">
+                    <input type="hidden" name="action" value="toggle_favorite">
+                    <button class="recipe-favorite-btn {% if recipe.is_favorited %}is-favorited{% endif %}" type="submit" aria-label="Favorite this recipe">
+                        <i class="fa-solid fa-heart"></i>
+                    </button>
+                </form>
+            </div>
+            <p class="recipe-author">
+                By <a href="{{ url_for('profile_view', user_id=recipe.author_id) }}">{{ recipe.author_name }}</a>
+            </p>
+            <div class="recipe-meta-badges">
+                {% if recipe.category %}
+                    <span class="recipe-badge">Category: {{ recipe.category }}</span>
+                {% endif %}
+                {% if recipe.difficulty %}
+                    <span class="recipe-badge">Difficulty: {{ recipe.difficulty }}</span>
+                {% endif %}
+            </div>
             <div class="recipe-rating">
                 {% set full_stars = recipe.rating|int %}
                 {% set has_half = (recipe.rating - full_stars) >= 0.5 %}
@@ -85,14 +104,37 @@
 
     <section class="recipe-section">
         <h3 class="recipe-section-title">Reviews</h3>
-        <div class="recipe-review add-review">
+        {% if session.get('user') %}
+        <form class="recipe-review add-review" method="post" action="{{ url_for('recipe', recipe_id=recipe.id) }}" id="review-form">
+            <input type="hidden" name="action" value="add_review">
             <div class="recipe-review-avatar">
                 <i class="fa-regular fa-circle-user"></i>
             </div>
             <div class="recipe-review-body">
                 <p class="recipe-review-title">Add A Review</p>
+                <div class="recipe-review-label">
+                    <span>Rating (required)</span>
+                    <div class="recipe-review-stars-input" data-selected="0">
+                        {% for i in range(1,6) %}
+                            <button type="button" class="recipe-star-btn" data-value="{{ i }}">
+                                <i class="fa-solid fa-star"></i>
+                            </button>
+                        {% endfor %}
+                        <input type="hidden" name="rating" id="review-rating" required>
+                    </div>
+                </div>
+                <label class="recipe-review-label">
+                    Comment (optional)
+                    <textarea name="comment" class="recipe-review-textarea" rows="3" placeholder="Share your thoughts"></textarea>
+                </label>
+                <div class="recipe-review-actions">
+                    <button type="submit" class="recipe-review-submit">Post Review</button>
+                </div>
             </div>
-        </div>
+        </form>
+        {% else %}
+            <p><a href="{{ url_for('login') }}">Log in</a> to add a review.</p>
+        {% endif %}
         {% for review in recipe.reviews %}
             <div class="recipe-review">
                 <div class="recipe-review-avatar">
@@ -101,8 +143,13 @@
                 <div class="recipe-review-body">
                     <p class="recipe-review-author">{{ review.author }}</p>
                     <div class="recipe-review-stars">
-                        {% for _ in range(0, review.rating) %}
-                            <i class="fa-solid fa-star"></i>
+                        {% set r_int = (review.rating or 0)|int %}
+                        {% for _ in range(0, 5) %}
+                            {% if loop.index <= review.rating %}
+                                <i class="fa-solid fa-star"></i>
+                            {% else %}
+                                <i class="fa-regular fa-star"></i>
+                            {% endif %}
                         {% endfor %}
                     </div>
                     <p class="recipe-review-text">{{ review.content }}</p>
@@ -125,4 +172,34 @@
         </div>
     </section>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const starButtons = document.querySelectorAll('.recipe-star-btn')
+        const ratingInput = document.getElementById('review-rating')
+        const form = document.getElementById('review-form')
+
+        const setActiveStars = (value) => {
+            starButtons.forEach((btn) => {
+                const btnValue = Number(btn.dataset.value)
+                btn.classList.toggle('active', btnValue <= value)
+            })
+        }
+
+        starButtons.forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const value = Number(btn.dataset.value)
+                ratingInput.value = value
+                ratingInput.setAttribute('value', value)
+                setActiveStars(value)
+            })
+        })
+
+        form?.addEventListener('submit', (e) => {
+            if (!ratingInput.value) {
+                e.preventDefault()
+                setActiveStars(0)
+            }
+        })
+    })
+</script>
 {% endblock %}

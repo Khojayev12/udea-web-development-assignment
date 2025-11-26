@@ -34,6 +34,60 @@
   font-weight: 700;
   line-height: 1.2;
 }
+.recipe-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.recipe-favorite-form {
+  margin: 0;
+}
+.recipe-favorite-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid #e6e6e6;
+  background-color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  color: #e0e0e0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.recipe-favorite-btn i {
+  color: inherit;
+}
+.recipe-favorite-btn:hover {
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.12);
+}
+.recipe-favorite-btn.is-favorited {
+  background-color: #e63946;
+  color: #ffffff;
+}
+.recipe-author {
+  margin: 4px 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+.recipe-author a {
+  color: inherit;
+  text-decoration: underline;
+}
+.recipe-meta-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.recipe-badge {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background-color: #fdf6df;
+  border: 1px solid #ebc76b;
+  font-weight: 600;
+  font-size: 14px;
+}
 .recipe-rating {
   display: flex;
   align-items: center;
@@ -214,6 +268,60 @@
 }
 .add-review .recipe-review-title {
   font-weight: 600;
+}
+.recipe-review-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  margin: 8px 0;
+}
+.recipe-review-select,
+.recipe-review-textarea {
+  font-family: "Montserrat", sans-serif;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.recipe-review-textarea {
+  resize: vertical;
+}
+.recipe-review-stars-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.recipe-star-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background-color: #ffffff;
+  cursor: pointer;
+  color: #e0e0e0;
+  display: grid;
+  place-items: center;
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.recipe-star-btn.active,
+.recipe-star-btn:hover {
+  background-color: #ebc76b;
+  color: #ffffff;
+  box-shadow: 0 0 0 2px rgba(235, 199, 107, 0.25);
+}
+.recipe-star-btn i {
+  color: inherit;
+}
+.recipe-review-actions {
+  margin-top: 8px;
+}
+.recipe-review-submit {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background-color: #ebc76b;
+  font-weight: 700;
+  cursor: pointer;
 }
 .recipe-recommendations {
   display: grid;
