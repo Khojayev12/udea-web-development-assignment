@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS Recipes (
   sugar                 DECIMAL(10,2),
   fiber                 DECIMAL(10,2),
   procedure_description TEXT,
+  status                VARCHAR(20) NOT NULL DEFAULT 'active',
   date_posted           DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_recipe_author FOREIGN KEY (author_id) REFERENCES Users(user_id) ON DELETE CASCADE,
   CONSTRAINT chk_prepare_time_nonneg CHECK (prepare_time IS NULL OR prepare_time >= 0),
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS Recipes (
 CREATE INDEX ix_recipes_author      ON Recipes(author_id);
 CREATE INDEX ix_recipes_category    ON Recipes(category);
 CREATE INDEX ix_recipes_dateposted  ON Recipes(date_posted);
+CREATE INDEX ix_recipes_status      ON Recipes(status);
 -- Full-text for catalogue search (title + procedure)
 CREATE FULLTEXT INDEX ft_recipes_title_procedure ON Recipes (title, procedure_description);
 

@@ -1,0 +1,57 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+{% set card_image = url_for('static', filename='media/registration.png') %}
+<div class="admin-recipes-page">
+    <div class="admin-recipes-header">
+        <div>
+            <p class="admin-recipes-kicker">Admin</p>
+            <h1 class="admin-recipes-title">Pending Recipes</h1>
+            <p class="admin-recipes-subtitle">Approve or delete recipes waiting for activation.</p>
+        </div>
+    </div>
+
+    {% if recipes %}
+        <div class="admin-recipes-grid">
+            {% for recipe in recipes %}
+                <div class="admin-recipe-card">
+                    <a class="recipe-card" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
+                        <div class="recipe-card__image-wrapper">
+                            <img
+                                class="recipe-card__image"
+                                src="{{ recipe.image or card_image }}"
+                                alt="{{ recipe.title }}"
+                            >
+                            <div class="admin-recipe-chip">{{ recipe.status|capitalize }}</div>
+                        </div>
+                        <div class="recipe-card__body">
+                            <h3 class="recipe-card__title">{{ recipe.title }}</h3>
+                            <p class="recipe-card__author">{{ recipe.prepare_time or 0 }} min &bull; {{ recipe.author_name }}</p>
+                            <div class="recipe-card__rating" aria-label="Rated {{ recipe.rating or 0 }} out of five stars">
+                                {% set rating_int = (recipe.rating or 0)|int %}
+                                {% for _ in range(0, 5) %}
+                                    <span class="rating-star {% if loop.index <= rating_int %}is-filled{% endif %}"></span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </a>
+                    <div class="admin-card-actions">
+                        <form method="post" action="{{ url_for('admin_recipes') }}">
+                            <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+                            <input type="hidden" name="action" value="activate">
+                            <button class="admin-approve-btn" type="submit">Activate</button>
+                        </form>
+                        <form method="post" action="{{ url_for('admin_recipes') }}">
+                            <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
+                            <input type="hidden" name="action" value="delete">
+                            <button class="admin-delete-btn" type="submit">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="admin-recipes-empty">No recipes are waiting for approval.</p>
+    {% endif %}
+</div>
+{% endblock %}

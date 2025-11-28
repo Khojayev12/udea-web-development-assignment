@@ -5,13 +5,27 @@
     <div class="add-header">
         <h1 class="add-title">Add Recipe</h1>
     </div>
+    {% if error %}
+        <p class="add-alert add-alert-error">{{ error }}</p>
+    {% elif success %}
+        <p class="add-alert add-alert-success">{{ success }}</p>
+    {% endif %}
     <form class="add-form" action="{{ url_for('add') }}" method="post" enctype="multipart/form-data">
         <div class="add-field">
-            <label class="add-label" for="photos">Photos</label>
+            <label class="add-label" for="photo">Photo</label>
             <div class="add-photo-drop">
-                <p class="add-helper">Upload up to 5 photos</p>
-                <label class="add-photo-btn" for="photos">Select photos</label>
-                <input id="photos" name="photos[]" type="file" accept="image/*" multiple style="display:none" />
+                <div class="add-photo-text">
+                    <p class="add-helper">Upload a single photo for your recipe</p>
+                    <p class="add-helper">Accepted: JPG, PNG, WEBP, GIF</p>
+                </div>
+                <div class="add-photo-actions">
+                    <label class="add-photo-btn" for="photo">Select photo</label>
+                    <span class="add-helper" id="photo-filename">No file selected</span>
+                </div>
+                <div class="add-photo-preview" id="photo-preview-wrapper" aria-live="polite">
+                    <img id="photo-preview" alt="Recipe preview" />
+                </div>
+                <input id="photo" name="photo" type="file" accept="image/*" style="display:none" />
             </div>
         </div>
 
@@ -22,30 +36,25 @@
 
         <div class="add-field">
             <label class="add-label">Ingredients</label>
-            <div class="add-list" id="ingredients-list">
-                <div class="add-list-item">
-                    <input class="add-input" name="ingredients[]" type="text" placeholder="e.g., 225g pasta" required>
-                    <button class="add-remove-btn" type="button" aria-label="Remove ingredient">&minus;</button>
+            <div class="add-list-row">
+                <div class="add-list" id="ingredients-list">
+                    <div class="add-list-item">
+                        <input class="add-input" name="ingredients[]" type="text" placeholder="e.g., 225g pasta" required>
+                        <button class="add-remove-btn" type="button" aria-label="Remove ingredient">&minus;</button>
+                    </div>
                 </div>
+                <button class="add-plus-btn add-inline" type="button" id="add-ingredient">+</button>
             </div>
-            <button class="add-plus-btn" type="button" id="add-ingredient">+</button>
         </div>
 
         <div class="add-field">
             <label class="add-label">Procedure</label>
-            <div class="add-list" id="steps-list">
-                <div class="add-list-item">
-                    <input class="add-input" name="steps[]" type="text" placeholder="Describe a step" required>
-                    <button class="add-remove-btn" type="button" aria-label="Remove step">&minus;</button>
-                </div>
-            </div>
-            <button class="add-plus-btn" type="button" id="add-step">+</button>
+            <textarea class="add-textarea" id="procedure" name="procedure" placeholder="Describe the full procedure" required></textarea>
         </div>
 
         <div class="add-field">
             <label class="add-label">Recipe Stats</label>
             <div class="add-grid-3">
-                <input class="add-number" name="ingredients_count" type="number" min="0" placeholder="Ingredients count" required>
                 <input class="add-number" name="prep_minutes" type="number" min="0" placeholder="Minutes" required>
                 <input class="add-number" name="calories" type="number" min="0" placeholder="Calories" required>
             </div>
@@ -53,14 +62,16 @@
 
         <div class="add-field">
             <label class="add-label">Nutrition</label>
-            <div class="add-list" id="nutrition-list">
-                <div class="add-list-item">
-                    <input class="add-small-input" name="nutrition_label[]" type="text" placeholder="Label (e.g., Protein)" required>
-                    <input class="add-small-input" name="nutrition_value[]" type="text" placeholder="Value (e.g., 45g)" required>
-                    <button class="add-remove-btn" type="button" aria-label="Remove nutrition">&minus;</button>
+            <div class="add-list-row">
+                <div class="add-list" id="nutrition-list">
+                    <div class="add-list-item">
+                        <input class="add-small-input" name="nutrition_label[]" type="text" placeholder="Label (e.g., Protein)" required>
+                        <input class="add-small-input" name="nutrition_value[]" type="text" placeholder="Value (e.g., 45g)" required>
+                        <button class="add-remove-btn" type="button" aria-label="Remove nutrition">&minus;</button>
+                    </div>
                 </div>
+                <button class="add-plus-btn add-inline" type="button" id="add-nutrition">+</button>
             </div>
-            <button class="add-plus-btn" type="button" id="add-nutrition">+</button>
         </div>
 
         <div class="add-field">
@@ -86,11 +97,6 @@
                 <input class="add-input" name="ingredients[]" type="text" placeholder="e.g., 225g pasta" required>
                 <button class="add-remove-btn" type="button" aria-label="Remove ingredient">&minus;</button>
             `
-        } else if (name === 'steps') {
-            wrapper.innerHTML = `
-                <input class="add-input" name="steps[]" type="text" placeholder="Describe a step" required>
-                <button class="add-remove-btn" type="button" aria-label="Remove step">&minus;</button>
-            `
         } else {
             wrapper.innerHTML = `
                 <input class="add-small-input" name="nutrition_label[]" type="text" placeholder="Label (e.g., Protein)" required>
@@ -105,12 +111,6 @@
     const ingredientsList = document.getElementById('ingredients-list')
     addIngredientBtn.addEventListener('click', () => {
         ingredientsList.appendChild(templateRow('ingredients'))
-    })
-
-    const addStepBtn = document.getElementById('add-step')
-    const stepsList = document.getElementById('steps-list')
-    addStepBtn.addEventListener('click', () => {
-        stepsList.appendChild(templateRow('steps'))
     })
 
     const addNutritionBtn = document.getElementById('add-nutrition')
@@ -130,6 +130,30 @@
             }
         })
     })
+
+    const photoInput = document.getElementById('photo')
+    const photoPreview = document.getElementById('photo-preview')
+    const photoPreviewWrapper = document.getElementById('photo-preview-wrapper')
+    const photoFilename = document.getElementById('photo-filename')
+
+    const updatePhotoPreview = () => {
+        const file = photoInput.files && photoInput.files[0]
+        if (!file) {
+            photoPreviewWrapper.classList.remove('is-visible')
+            photoPreview.src = ''
+            photoFilename.textContent = 'No file selected'
+            return
+        }
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            photoPreview.src = e.target.result
+            photoPreviewWrapper.classList.add('is-visible')
+            photoFilename.textContent = file.name
+        }
+        reader.readAsDataURL(file)
+    }
+
+    photoInput.addEventListener('change', updatePhotoPreview)
 
     const tagsContainer = document.getElementById('tags-container')
     const tagsSerialized = document.getElementById('tags-serialized')

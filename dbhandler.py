@@ -35,9 +35,25 @@ class DBHandler():
             self.cnx.rollback()
             return False
 
+    def fetch_user_role(self, user_id: int):
+        """Return the role for the given user id."""
+        try:
+            self.cursor.execute("select role from Users where user_id = %s", (user_id,))
+            row = self.cursor.fetchone()
+            return row[0] if row else None
+        except Error as err:
+            print("Failed to fetch user role:", err)
+            return None
+
     def fetch_recent_recipes(self, limit=4):
         """Return a list of the most recent recipes with id, title, and cover image."""
-        query = "select recipe_id, title, cover_img_path from Recipes order by date_posted desc limit %s"
+        query = """
+            select recipe_id, title, cover_img_path
+            from Recipes
+            where status = 'active'
+            order by date_posted desc
+            limit %s
+        """
         try:
             self.cursor.execute(query, (limit,))
             rows = self.cursor.fetchall()
@@ -54,7 +70,13 @@ class DBHandler():
 
     def fetch_more_recipes(self, limit=4, offset=4):
         """Return the next set of recent recipes after the top batch."""
-        query = "select recipe_id, title, cover_img_path from Recipes order by date_posted desc limit %s offset %s"
+        query = """
+            select recipe_id, title, cover_img_path
+            from Recipes
+            where status = 'active'
+            order by date_posted desc
+            limit %s offset %s
+        """
         try:
             self.cursor.execute(query, (limit, offset))
             rows = self.cursor.fetchall()
@@ -74,6 +96,7 @@ class DBHandler():
         query = """
             select recipe_id, title, cover_img_path
             from Recipes
+            where status = 'active'
             order by rating desc, date_posted desc
             limit %s
         """
@@ -91,15 +114,133 @@ class DBHandler():
             print("Failed to fetch popular recipes:", err)
             return []
 
-    def fetch_recipe_detail(self, recipe_id: int):
+    def fetch_inactive_recipes(self):
+        """Return recipes that are not active for admin review."""
+        query = """
+            select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time, r.status,
+                   coalesce(concat_ws(' ', u.name, u.surname), 'User') as author_name
+            from Recipes r
+            left join Users u on r.author_id = u.user_id
+            where r.status <> 'active'
+            order by r.date_posted desc
+        """
+        try:
+            self.cursor.execute(query)
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "title": row[1],
+                    "image": row[2],
+                    "rating": row[3],
+                    "prepare_time": row[4],
+                    "status": row[5],
+                    "author_name": row[6],
+                } for row in rows
+            ]
+        except Error as err:
+            print("Failed to fetch inactive recipes:", err)
+            return []
+
+    def update_recipe_status(self, recipe_id: int, status: str):
+        """Update a recipe's status."""
+        if status not in ("active", "inactive"):
+            return False
+        query = "update Recipes set status = %s where recipe_id = %s"
+        try:
+            self.cursor.execute(query, (status, recipe_id))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to update recipe status:", err)
+            self.cnx.rollback()
+            return False
+
+    def delete_recipe(self, recipe_id: int):
+        """Delete a recipe by id."""
+        try:
+            self.cursor.execute("delete from Recipes where recipe_id = %s", (recipe_id,))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to delete recipe:", err)
+            self.cnx.rollback()
+            return False
+
+    def create_recipe(self, *, title: str, author_id: int, procedure: str, prepare_time=None, calories=None,
+                      category=None, difficulty=None, cover_img_path=None, nutrition=None, status="inactive"):
+        """Create a new recipe and return its id."""
+        query = """
+            insert into Recipes (title, author_id, category, difficulty, cover_img_path,
+                                 prepare_time, calories, procedure_description, protein, carbs, fats, sugar, fiber,
+                                 status)
+            values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        nutrition = nutrition or {}
+        try:
+            self.cursor.execute(
+                query,
+                (
+                    title,
+                    author_id,
+                    category,
+                    difficulty,
+                    cover_img_path,
+                    prepare_time,
+                    calories,
+                    procedure,
+                    nutrition.get("protein"),
+                    nutrition.get("carbs"),
+                    nutrition.get("fats"),
+                    nutrition.get("sugar"),
+                    nutrition.get("fiber"),
+                    status,
+                ),
+            )
+            self.cnx.commit()
+            return self.cursor.lastrowid
+        except Error as err:
+            print("Failed to create recipe:", err)
+            self.cnx.rollback()
+            return None
+
+    def add_recipe_ingredients(self, recipe_id: int, ingredients: list[str]):
+        """Bulk insert ingredients for a recipe."""
+        if not ingredients:
+            return True
+        query = "insert into Ingredients (recipe_id, ingredient) values (%s, %s)"
+        try:
+            self.cursor.executemany(query, [(recipe_id, ing) for ing in ingredients])
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to insert ingredients:", err)
+            self.cnx.rollback()
+            return False
+
+    def add_recipe_tags(self, recipe_id: int, tags: list[str]):
+        """Bulk insert tags for a recipe."""
+        if not tags:
+            return True
+        query = "insert into Tags (recipe_id, tag_name) values (%s, %s)"
+        try:
+            self.cursor.executemany(query, [(recipe_id, tag) for tag in tags])
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to insert tags:", err)
+            self.cnx.rollback()
+            return False
+
+    def fetch_recipe_detail(self, recipe_id: int, include_inactive: bool = False):
         """Return full recipe details for a given recipe_id."""
         recipe_query = """
             select recipe_id, title, category, difficulty, rating, cover_img_path, prepare_time, calories,
-                   protein, carbs, fats, sugar, fiber, procedure_description
-                   , author_id,
+                   protein, carbs, fats, sugar, fiber, procedure_description, status,
+                   author_id,
                    (select concat_ws(' ', u.name, u.surname) from Users u where u.user_id = r.author_id) as author_name
             from Recipes r
-            where r.recipe_id = %s
+            where r.recipe_id = %s {status_clause}
         """
         ing_query = "select ingredient from Ingredients where recipe_id = %s order by ingredient_id"
         tag_query = "select tag_name from Tags where recipe_id = %s order by tag_id"
@@ -112,7 +253,8 @@ class DBHandler():
             limit 5
         """
         try:
-            self.cursor.execute(recipe_query, (recipe_id,))
+            status_clause = "" if include_inactive else "and r.status = 'active'"
+            self.cursor.execute(recipe_query.format(status_clause=status_clause), (recipe_id,))
             recipe_row = self.cursor.fetchone()
             if not recipe_row:
                 return None
@@ -141,8 +283,9 @@ class DBHandler():
                 "sugar": recipe_row[11],
                 "fiber": recipe_row[12],
                 "procedure_description": recipe_row[13] or "",
-                "author_id": recipe_row[14],
-                "author_name": recipe_row[15] or "User",
+                "status": recipe_row[14],
+                "author_id": recipe_row[15],
+                "author_name": recipe_row[16] or "User",
                 "ingredients": [row[0] for row in ing_rows],
                 "tags": [row[0] for row in tag_rows],
                 "reviews": [
@@ -176,6 +319,7 @@ class DBHandler():
         if max_time is not None:
             base.append("and prepare_time <= %s")
             params.append(max_time)
+        base.append("and status = 'active'")
         base.append("order by date_posted desc limit %s offset %s")
         params.extend([limit, offset])
 
@@ -201,9 +345,13 @@ class DBHandler():
         categories = []
         difficulties = []
         try:
-            self.cursor.execute("select distinct category from Recipes where category is not null order by category")
+            self.cursor.execute(
+                "select distinct category from Recipes where category is not null and status = 'active' order by category"
+            )
             categories = [row[0] for row in self.cursor.fetchall() if row[0]]
-            self.cursor.execute("select distinct difficulty from Recipes where difficulty is not null order by difficulty")
+            self.cursor.execute(
+                "select distinct difficulty from Recipes where difficulty is not null and status = 'active' order by difficulty"
+            )
             difficulties = [row[0] for row in self.cursor.fetchall() if row[0]]
         except Error as err:
             print("Failed to fetch filter lists:", err)
@@ -211,7 +359,7 @@ class DBHandler():
 
     def fetch_feed_count(self, category=None, difficulty=None, max_time=None):
         """Count recipes matching filters."""
-        base = ["select count(*) from Recipes where 1=1"]
+        base = ["select count(*) from Recipes where status = 'active'"]
         params = []
         if category:
             base.append("and category = %s")
@@ -258,7 +406,7 @@ class DBHandler():
                 """
                 select count(*) from Likes l
                 join Recipes r on l.recipe_id = r.recipe_id
-                where r.author_id = %s
+                where r.author_id = %s and r.status = 'active'
                 """,
                 (user_id,)
             )
@@ -271,13 +419,13 @@ class DBHandler():
                 """
                 select count(*) from Ratings rt
                 join Recipes r on rt.recipe_id = r.recipe_id
-                where r.author_id = %s
+                where r.author_id = %s and r.status = 'active'
                 """,
                 (user_id,)
             )
             stats["reviews"] = self.cursor.fetchone()[0] or 0
 
-            self.cursor.execute("select count(*) from Recipes where author_id = %s", (user_id,))
+            self.cursor.execute("select count(*) from Recipes where author_id = %s and status = 'active'", (user_id,))
             stats["posted"] = self.cursor.fetchone()[0] or 0
 
             self.cursor.execute(
@@ -285,7 +433,7 @@ class DBHandler():
                 select avg(rt.rating), count(rt.rating)
                 from Ratings rt
                 join Recipes r on rt.recipe_id = r.recipe_id
-                where r.author_id = %s
+                where r.author_id = %s and r.status = 'active'
                 """,
                 (user_id,)
             )
@@ -301,7 +449,7 @@ class DBHandler():
         query = """
             select recipe_id, title, cover_img_path, rating, prepare_time
             from Recipes
-            where author_id = %s
+            where author_id = %s and status = 'active'
             order by date_posted desc
             limit %s
         """
@@ -326,7 +474,7 @@ class DBHandler():
             select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
             from Likes l
             join Recipes r on l.recipe_id = r.recipe_id
-            where l.user_id = %s
+            where l.user_id = %s and r.status = 'active'
             order by l.date_liked desc
             limit %s
         """

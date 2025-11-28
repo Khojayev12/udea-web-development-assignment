@@ -1,9 +1,41 @@
+import os
+import uuid
 from flask import Flask, render_template, redirect, request, url_for, jsonify, session, abort
 from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.utils import secure_filename
 from dbhandler import DBHandler
 app = Flask(__name__)
 app.secret_key = "mytestkey"
 mydb = DBHandler()
+
+
+@app.before_request
+def ensure_session_role():
+    """Populate session role for logged in users."""
+    user_id = session.get('user') or session.get('user_id')
+    if user_id and not session.get('role'):
+        role = mydb.fetch_user_role(user_id)
+        if role:
+            session['role'] = role
+    if user_id and not session.get('user_id'):
+        session['user_id'] = user_id
+    if user_id and not session.get('user'):
+        session['user'] = user_id
+
+
+def get_current_user():
+    """Return (user_id, role) and hydrate session role if missing."""
+    user_id = session.get('user') or session.get('user_id')
+    role = session.get('role')
+    if user_id and not role:
+        role = mydb.fetch_user_role(user_id)
+        if role:
+            session['role'] = role
+    if user_id and not session.get('user_id'):
+        session['user_id'] = user_id
+    if user_id and not session.get('user'):
+        session['user'] = user_id
+    return user_id, role
 
 
 def create_user_account(name: str, email: str, password: str) -> bool:
@@ -27,8 +59,7 @@ def authenticate_user(email: str, password: str):
 # adding comment, making change
 @app.route('/signout', methods=['GET', 'POST'])
 def signout():
-    if request.method == 'POST':
-        session.clear()
+    session.clear()
     return redirect(url_for('index'))
 
 def test_git():
@@ -79,15 +110,19 @@ def feed():
 
 @app.route('/recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe(recipe_id: int):
-    recipe_row = mydb.fetch_recipe_detail(recipe_id)
+    session_user, session_role = get_current_user()
+    is_admin = session_role == 'admin'
+
+    recipe_row = mydb.fetch_recipe_detail(recipe_id, include_inactive=is_admin)
     if not recipe_row:
+        abort(404)
+    if recipe_row.get("status") != "active" and not is_admin:
         abort(404)
 
     image_path = recipe_row.get("cover_img_path")
     rating_value = float(recipe_row.get("rating") or 0)
     ingredients = recipe_row.get("ingredients", [])
     tags = recipe_row.get("tags", [])
-    session_user = session.get('user')
     is_favorited = False
     if session_user:
         is_favorited = mydb.has_user_liked_recipe(session_user, recipe_id)
@@ -139,13 +174,9 @@ def recipe(recipe_id: int):
         {"label": "Calories", "value": str(recipe_row.get("calories") or 0)},
     ]
 
-    procedure_text = recipe_row.get("procedure_description") or ""
-    procedure_lines = [line.strip() for line in procedure_text.split("\n") if line.strip()]
-    steps = []
-    if procedure_lines:
-        steps = [{"title": f"Step {idx}", "items": [line]} for idx, line in enumerate(procedure_lines, start=1)]
-    else:
-        steps = [{"title": "Step 1", "items": ["Follow the recipe instructions."]}]
+    procedure_text = (recipe_row.get("procedure_description") or "").strip()
+    if not procedure_text:
+        procedure_text = "Follow the recipe instructions."
 
     reviews_raw = recipe_row.get("reviews", [])
     reviews = []
@@ -169,10 +200,12 @@ def recipe(recipe_id: int):
         "ingredients": ingredients,
         "nutrition": nutrition,
         "stats": stats,
-        "steps": steps,
+        "procedure": procedure_text,
         "tags": tags,
         "reviews": reviews,
-        "is_favorited": is_favorited
+        "is_favorited": is_favorited,
+        "status": recipe_row.get("status"),
+        "is_admin": is_admin
     }
 
     return render_template('pages/recipe.html', recipe=recipe_data)
@@ -230,9 +263,103 @@ def profile_view(user_id: int):
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
-    if 'user' not in session:
+    session_user, session_role = get_current_user()
+    if not session_user:
         return redirect(url_for('login'))
+    if request.method == 'POST':
+        title = (request.form.get('title') or "").strip()
+        ingredients_raw = request.form.getlist('ingredients[]')
+        procedure_text = (request.form.get('procedure') or "").strip()
+        tags = request.form.getlist('tags[]')
+        prep_minutes_raw = request.form.get('prep_minutes')
+        calories_raw = request.form.get('calories')
+        ingredients = [i.strip() for i in ingredients_raw if i and i.strip()]
+
+        photo_file = request.files.get('photo')
+        cover_img_path = None
+        allowed_ext = {"png", "jpg", "jpeg", "gif", "webp"}
+
+        def parse_number(val):
+            if val is None or val == "":
+                return None
+            try:
+                return float(val)
+            except ValueError:
+                return None
+
+        nutrition_labels = request.form.getlist('nutrition_label[]')
+        nutrition_values = request.form.getlist('nutrition_value[]')
+        nutrition_map = {}
+        for label, value in zip(nutrition_labels, nutrition_values):
+            key = (label or "").strip().lower()
+            if key in {"protein", "carbs", "fats", "sugar", "fiber"}:
+                nutrition_map[key] = parse_number(value)
+
+        prepare_time = parse_number(prep_minutes_raw)
+        calories = parse_number(calories_raw)
+
+        if not title or not ingredients or not procedure_text:
+            error = "Title, ingredients, and procedure are required."
+            return render_template('pages/add.html', error=error)
+
+        if photo_file and photo_file.filename:
+            filename = secure_filename(photo_file.filename)
+            ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+            if ext in allowed_ext:
+                upload_dir = os.path.join(app.root_path, "static", "media", "recipes")
+                os.makedirs(upload_dir, exist_ok=True)
+                final_name = f"{uuid.uuid4().hex}_{filename}"
+                file_path = os.path.join(upload_dir, final_name)
+                photo_file.save(file_path)
+                cover_img_path = f"/static/media/recipes/{final_name}"
+            else:
+                error = "Please upload a valid image file."
+                return render_template('pages/add.html', error=error)
+
+        recipe_id = mydb.create_recipe(
+            title=title,
+            author_id=session_user,
+            procedure=procedure_text,
+            prepare_time=prepare_time,
+            calories=calories,
+            cover_img_path=cover_img_path,
+            nutrition=nutrition_map,
+            status="inactive",
+        )
+        if recipe_id:
+            mydb.add_recipe_ingredients(recipe_id, ingredients)
+            mydb.add_recipe_tags(recipe_id, [t.strip() for t in tags if t.strip()])
+            if session_role == 'admin':
+                return redirect(url_for('recipe', recipe_id=recipe_id))
+            return render_template('pages/add.html', success="Your recipe was submitted for admin approval.")
+
+        return render_template('pages/add.html', error="Could not save recipe. Please try again.")
+
     return render_template('pages/add.html')
+
+@app.route('/admin/recipes', methods=['GET', 'POST'])
+def admin_recipes():
+    user_id, role = get_current_user()
+    print("USER ID AND ROLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    print(user_id, role)
+    if not user_id:
+        return redirect(url_for('login'))
+    if role != 'admin':
+        abort(403)
+
+    if request.method == 'POST':
+        recipe_id_raw = request.form.get('recipe_id')
+        action = request.form.get('action')
+        if recipe_id_raw and recipe_id_raw.isdigit():
+            recipe_id = int(recipe_id_raw)
+            if action == 'activate':
+                mydb.update_recipe_status(recipe_id, 'active')
+            elif action == 'delete':
+                mydb.delete_recipe(recipe_id)
+        return redirect(url_for('admin_recipes'))
+
+    pending_recipes = mydb.fetch_inactive_recipes()
+    return render_template('pages/admin_recipes.html', recipes=pending_recipes)
 
 @app.route('/notifications', methods=['GET', 'POST'])
 def notifications():
@@ -251,6 +378,10 @@ def login():
             session.clear()
             session.permanent = True
             session['user'] = user_id
+            session['user_id'] = user_id
+            session_role = mydb.fetch_user_role(user_id)
+            if session_role:
+                session['role'] = session_role
             return redirect(url_for('home'))
         return render_template('pages/login.html', error='Invalid email or password.')
     return render_template('pages/login.html', error=None)

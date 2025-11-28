@@ -79,18 +79,7 @@
 
     <section class="recipe-section">
         <h3 class="recipe-section-title">Procedure</h3>
-        <ol class="recipe-steps">
-            {% for step in recipe.steps %}
-                <li>
-                    <span class="recipe-step-title">{{ step.title }}:</span>
-                    <ul>
-                        {% for item in step['items'] %}
-                            <li>{{ item }}</li>
-                        {% endfor %}
-                    </ul>
-                </li>
-            {% endfor %}
-        </ol>
+        <p class="recipe-procedure">{{ recipe.procedure }}</p>
     </section>
 
     <section class="recipe-section">

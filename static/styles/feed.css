@@ -352,6 +352,112 @@
   background-color: #f4c150;
 }
 
+.admin-recipes-page {
+  padding: 48px 16px 80px;
+  margin-top: 100px;
+  background-color: #f6f6f6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.admin-recipes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 24px;
+}
+.admin-recipes-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: #c48b12;
+}
+.admin-recipes-title {
+  margin: 4px 0;
+  font-size: 32px;
+}
+.admin-recipes-subtitle {
+  margin: 0;
+  color: #4d4d4d;
+}
+.admin-recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+.admin-recipe-card {
+  background-color: #ffffff;
+  border: 1px solid #ededed;
+  border-radius: 16px;
+  box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.06);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+}
+.admin-recipe-card .recipe-card {
+  margin-top: 0;
+  width: 100%;
+}
+.admin-recipe-chip {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  background-color: #fff7e0;
+  color: #8a6400;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.admin-card-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: auto;
+}
+.admin-card-actions form {
+  flex: 1;
+}
+.admin-approve-btn,
+.admin-delete-btn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-approve-btn {
+  background-color: #1ba94c;
+  color: #ffffff;
+}
+.admin-delete-btn {
+  background-color: #d9534f;
+  color: #ffffff;
+}
+.admin-approve-btn:hover {
+  background-color: #189645;
+}
+.admin-delete-btn:hover {
+  background-color: #c5403c;
+}
+.admin-recipes-empty {
+  width: 100%;
+  max-width: 1200px;
+  margin: 12px auto 0;
+  color: #4d4d4d;
+}
+
 @media (max-width: 1280px) {
   .feed-page {
     padding: 32px 12px 72px;
