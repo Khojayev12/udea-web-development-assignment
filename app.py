@@ -350,16 +350,41 @@ def admin_recipes():
     if request.method == 'POST':
         recipe_id_raw = request.form.get('recipe_id')
         action = request.form.get('action')
-        if recipe_id_raw and recipe_id_raw.isdigit():
+        if action == 'activate_all':
+            mydb.activate_all_pending_recipes()
+        elif action == 'delete_rating':
+            rate_id_raw = request.form.get('rate_id')
+            if rate_id_raw and rate_id_raw.isdigit():
+                mydb.delete_rating(int(rate_id_raw))
+        elif recipe_id_raw and recipe_id_raw.isdigit():
             recipe_id = int(recipe_id_raw)
             if action == 'activate':
                 mydb.update_recipe_status(recipe_id, 'active')
             elif action == 'delete':
                 mydb.delete_recipe(recipe_id)
-        return redirect(url_for('admin_recipes'))
+        return redirect(url_for('admin_recipes', reviews_page=request.args.get('reviews_page', '1')))
 
     pending_recipes = mydb.fetch_inactive_recipes()
-    return render_template('pages/admin_recipes.html', recipes=pending_recipes)
+
+    reviews_page_raw = request.args.get('reviews_page', '1')
+    reviews_page = int(reviews_page_raw) if reviews_page_raw.isdigit() and int(reviews_page_raw) > 0 else 1
+    reviews_per_page = 20
+    reviews_offset = (reviews_page - 1) * reviews_per_page
+    reviews_total = mydb.fetch_ratings_count()
+    reviews_total_pages = max(1, (reviews_total + reviews_per_page - 1) // reviews_per_page)
+    reviews_prev = reviews_page - 1 if reviews_page > 1 else None
+    reviews_next = reviews_page + 1 if reviews_page < reviews_total_pages else None
+    ratings = mydb.fetch_ratings_admin(limit=reviews_per_page, offset=reviews_offset)
+
+    return render_template(
+        'pages/admin_recipes.html',
+        recipes=pending_recipes,
+        ratings=ratings,
+        reviews_page=reviews_page,
+        reviews_total_pages=reviews_total_pages,
+        reviews_prev=reviews_prev,
+        reviews_next=reviews_next,
+    )
 
 @app.route('/notifications', methods=['GET', 'POST'])
 def notifications():
@@ -408,4 +433,4 @@ def signup():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=8000)

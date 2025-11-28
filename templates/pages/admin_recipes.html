@@ -9,6 +9,10 @@
             <h1 class="admin-recipes-title">Pending Recipes</h1>
             <p class="admin-recipes-subtitle">Approve or delete recipes waiting for activation.</p>
         </div>
+        <form method="post" action="{{ url_for('admin_recipes') }}" class="admin-bulk-actions">
+            <input type="hidden" name="action" value="activate_all">
+            <button class="admin-approve-btn" type="submit">Approve All Pending</button>
+        </form>
     </div>
 
     {% if recipes %}
@@ -53,5 +57,68 @@
     {% else %}
         <p class="admin-recipes-empty">No recipes are waiting for approval.</p>
     {% endif %}
+
+    <div class="admin-reviews-section">
+        <div class="admin-reviews-header">
+            <div>
+                <p class="admin-recipes-kicker">Moderation</p>
+                <h2 class="admin-recipes-title">Recent Comments & Ratings</h2>
+                <p class="admin-recipes-subtitle">Latest first. Delete removes the review immediately.</p>
+            </div>
+        </div>
+        <div class="admin-reviews-table-wrapper">
+            <table class="admin-reviews-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Rating</th>
+                        <th>Comment</th>
+                        <th>Date</th>
+                        <th>User</th>
+                        <th>Recipe</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if ratings %}
+                        {% for review in ratings %}
+                            <tr>
+                                <td>{{ review.id }}</td>
+                                <td>{{ review.rating or 0 }}</td>
+                                <td class="admin-review-comment">{{ review.comment or 'No comment' }}</td>
+                                <td>{{ review.date_posted }}</td>
+                                <td>{{ review.user_name }}</td>
+                                <td>{{ review.recipe_title }}</td>
+                                <td>
+                                    <form method="post" action="{{ url_for('admin_recipes', reviews_page=reviews_page) }}">
+                                        <input type="hidden" name="action" value="delete_rating">
+                                        <input type="hidden" name="rate_id" value="{{ review.id }}">
+                                        <button class="admin-delete-btn" type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="admin-recipes-empty">No comments found.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <div class="admin-reviews-pagination">
+            {% if reviews_prev %}
+                <a class="feed-page-btn" href="{{ url_for('admin_recipes', reviews_page=reviews_prev) }}">&larr; Prev</a>
+            {% else %}
+                <span class="feed-page-btn disabled">&larr; Prev</span>
+            {% endif %}
+            <span class="feed-page-status">Page {{ reviews_page }} of {{ reviews_total_pages }}</span>
+            {% if reviews_next %}
+                <a class="feed-page-btn" href="{{ url_for('admin_recipes', reviews_page=reviews_next) }}">Next &rarr;</a>
+            {% else %}
+                <span class="feed-page-btn disabled">Next &rarr;</span>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

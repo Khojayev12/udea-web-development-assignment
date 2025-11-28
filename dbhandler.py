@@ -156,6 +156,17 @@ class DBHandler():
             self.cnx.rollback()
             return False
 
+    def activate_all_pending_recipes(self):
+        """Mark all inactive recipes as active."""
+        try:
+            self.cursor.execute("update Recipes set status = 'active' where status = 'inactive'")
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to activate all recipes:", err)
+            self.cnx.rollback()
+            return False
+
     def delete_recipe(self, recipe_id: int):
         """Delete a recipe by id."""
         try:
@@ -301,6 +312,60 @@ class DBHandler():
         except Error as err:
             print("Failed to fetch recipe detail:", err)
             return None
+
+    def fetch_ratings_admin(self, limit=10, offset=0):
+        """Fetch ratings/comments with user and recipe info for admin view."""
+        query = """
+            select rat.rate_id,
+                   rat.rating,
+                   rat.comment,
+                   rat.date_posted,
+                   concat_ws(' ', u.name, u.surname) as user_name,
+                   rec.title
+            from Ratings rat
+            join Users u on rat.user_id = u.user_id
+            join Recipes rec on rat.recipe_id = rec.recipe_id
+            order by rat.date_posted desc
+            limit %s offset %s
+        """
+        try:
+            self.cursor.execute(query, (limit, offset))
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "rating": row[1],
+                    "comment": row[2],
+                    "date_posted": row[3],
+                    "user_name": row[4],
+                    "recipe_title": row[5],
+                }
+                for row in rows
+            ]
+        except Error as err:
+            print("Failed to fetch ratings for admin:", err)
+            return []
+
+    def fetch_ratings_count(self):
+        """Return total ratings count."""
+        try:
+            self.cursor.execute("select count(*) from Ratings")
+            row = self.cursor.fetchone()
+            return row[0] if row else 0
+        except Error as err:
+            print("Failed to count ratings:", err)
+            return 0
+
+    def delete_rating(self, rate_id: int):
+        """Delete a rating/comment by id."""
+        try:
+            self.cursor.execute("delete from Ratings where rate_id = %s", (rate_id,))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to delete rating:", err)
+            self.cnx.rollback()
+            return False
 
     def fetch_feed_recipes(self, category=None, difficulty=None, max_time=None, limit=12, offset=0):
         """Fetch recipes for the feed with optional filters."""
