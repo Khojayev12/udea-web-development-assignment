@@ -73,6 +73,54 @@ def index():
     return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
 
 
+@app.route('/api/search')
+def api_search():
+    """Autocomplete search endpoint for recipe titles, categories, and ingredients."""
+    query = (request.args.get('q') or "").strip()
+    limit_raw = request.args.get('limit')
+    try:
+        limit = int(limit_raw) if limit_raw else 5
+    except ValueError:
+        limit = 5
+    limit = max(1, min(limit, 15))
+
+    results = mydb.search_recipes(query, limit=limit, offset=0)
+    return jsonify([
+        {
+            "id": r.get("id"),
+            "title": r.get("title"),
+            "image": r.get("image"),
+            "rating": r.get("rating"),
+        } for r in results
+    ])
+
+
+@app.route('/search')
+def search():
+    query = (request.args.get('q') or "").strip()
+    page_raw = request.args.get('page', '1')
+    page = int(page_raw) if page_raw.isdigit() and int(page_raw) > 0 else 1
+    per_page = 12
+    offset = (page - 1) * per_page
+
+    recipes = mydb.search_recipes(query, limit=per_page, offset=offset) if query else []
+    total_count = mydb.search_recipes_count(query) if query else 0
+    total_pages = max(1, (total_count + per_page - 1) // per_page) if query else 1
+    prev_page = page - 1 if page > 1 and page <= total_pages else None
+    next_page = page + 1 if page < total_pages else None
+
+    return render_template(
+        'pages/search.html',
+        query=query,
+        recipes=recipes,
+        page=page,
+        total_pages=total_pages,
+        prev_page=prev_page,
+        next_page=next_page,
+        total_count=total_count,
+    )
+
+
 @app.route('/feed')
 def feed():
     category = request.args.get('category') or None
@@ -144,14 +192,8 @@ def recipe(recipe_id: int):
             if rating and rating.isdigit():
                 rating_val = int(rating)
                 if 1 <= rating_val <= 5:
-                    try:
-                        mydb.cursor.execute(
-                            "insert into Ratings (recipe_id, user_id, rating, comment) values (%s, %s, %s, %s)",
-                            (recipe_id, session_user, rating_val, comment)
-                        )
-                        mydb.cnx.commit()
-                    except Exception as err:
-                        print("Failed to add review:", err)
+                    if not mydb.add_rating(recipe_id, session_user, rating_val, comment):
+                        print("Failed to add review via add_rating helper")
             return redirect(url_for('recipe', recipe_id=recipe_id))
 
         return redirect(url_for('recipe', recipe_id=recipe_id))

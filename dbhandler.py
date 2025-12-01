@@ -9,6 +9,7 @@ class DBHandler():
                                 database='recipedb')
             self.cursor = self.cnx.cursor()
             print("DBhandler initiated")
+            self._user_rating_column = None
         except Error as e:
             print("Failed to connect!", e)
     def closer_connection(self):
@@ -43,6 +44,28 @@ class DBHandler():
             return row[0] if row else None
         except Error as err:
             print("Failed to fetch user role:", err)
+            return None
+
+    def _user_rating_column_available(self):
+        """Check once whether Users table has a rating column to persist profile rating."""
+        if self._user_rating_column is not None:
+            return self._user_rating_column
+        try:
+            self.cursor.execute("show columns from Users like 'rating'")
+            self._user_rating_column = self.cursor.fetchone() is not None
+        except Error as err:
+            print("Failed to inspect Users.rating column:", err)
+            self._user_rating_column = False
+        return self._user_rating_column
+
+    def _fetch_recipe_author(self, recipe_id: int):
+        """Return the author_id for a recipe or None if not found."""
+        try:
+            self.cursor.execute("select author_id from Recipes where recipe_id = %s", (recipe_id,))
+            row = self.cursor.fetchone()
+            return row[0] if row else None
+        except Error as err:
+            print("Failed to fetch recipe author:", err)
             return None
 
     def fetch_recent_recipes(self, limit=4):
@@ -313,6 +336,71 @@ class DBHandler():
             print("Failed to fetch recipe detail:", err)
             return None
 
+    def recalc_user_rating(self, user_id: int, auto_commit: bool = True):
+        """Recalculate average rating for a user based on their recipes' ratings."""
+        try:
+            self.cursor.execute(
+                """
+                select avg(rt.rating)
+                from Ratings rt
+                join Recipes r on rt.recipe_id = r.recipe_id
+                where r.author_id = %s
+                """,
+                (user_id,),
+            )
+            row = self.cursor.fetchone()
+            avg_rating = float(row[0]) if row and row[0] is not None else None
+
+            if self._user_rating_column_available():
+                self.cursor.execute("update Users set rating = %s where user_id = %s", (avg_rating, user_id))
+
+            if auto_commit:
+                self.cnx.commit()
+            return avg_rating
+        except Error as err:
+            print("Failed to recalc user rating:", err)
+            if auto_commit:
+                self.cnx.rollback()
+            raise
+
+    def recalc_recipe_rating(self, recipe_id: int, auto_commit: bool = True):
+        """Recalculate recipe.rating from all posted ratings and update the author rating."""
+        try:
+            self.cursor.execute("select avg(rating) from Ratings where recipe_id = %s", (recipe_id,))
+            row = self.cursor.fetchone()
+            avg_rating = float(row[0]) if row and row[0] is not None else None
+
+            self.cursor.execute("update Recipes set rating = %s where recipe_id = %s", (avg_rating, recipe_id))
+
+            author_id = self._fetch_recipe_author(recipe_id)
+            if author_id:
+                # Update the author's profile rating whenever a recipe rating changes.
+                self.recalc_user_rating(author_id, auto_commit=False)
+
+            if auto_commit:
+                self.cnx.commit()
+            return avg_rating
+        except Error as err:
+            print("Failed to recalc recipe rating:", err)
+            if auto_commit:
+                self.cnx.rollback()
+            raise
+
+    def add_rating(self, recipe_id: int, user_id: int, rating: int, comment: str = ""):
+        """Insert a new rating, then refresh recipe and author aggregates."""
+        try:
+            self.cursor.execute(
+                "insert into Ratings (recipe_id, user_id, rating, comment) values (%s, %s, %s, %s)",
+                (recipe_id, user_id, rating, comment),
+            )
+            self.recalc_recipe_rating(recipe_id, auto_commit=False)
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to add rating:", err)
+            self.cnx.rollback()
+            return False
+
     def fetch_ratings_admin(self, limit=10, offset=0):
         """Fetch ratings/comments with user and recipe info for admin view."""
         query = """
@@ -359,7 +447,17 @@ class DBHandler():
     def delete_rating(self, rate_id: int):
         """Delete a rating/comment by id."""
         try:
+            recipe_id = None
+            self.cursor.execute("select recipe_id from Ratings where rate_id = %s", (rate_id,))
+            row = self.cursor.fetchone()
+            if row:
+                recipe_id = row[0]
+
             self.cursor.execute("delete from Ratings where rate_id = %s", (rate_id,))
+
+            if recipe_id:
+                self.recalc_recipe_rating(recipe_id, auto_commit=False)
+
             self.cnx.commit()
             return True
         except Error as err:
@@ -509,6 +607,66 @@ class DBHandler():
         except Error as err:
             print("Failed to fetch user stats:", err)
         return stats
+
+    def search_recipes(self, query: str, limit: int = 12, offset: int = 0):
+        """Search recipes by title, ingredient, or category for active recipes."""
+        if not query or not query.strip():
+            return []
+        like_pattern = f"%{query.strip()}%"
+        sql = """
+            select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
+            from Recipes r
+            left join Ingredients i on i.recipe_id = r.recipe_id
+            where r.status = 'active'
+              and (
+                  r.title like %s
+                  or r.category like %s
+                  or i.ingredient like %s
+              )
+            group by r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
+            order by r.date_posted desc
+            limit %s offset %s
+        """
+        try:
+            self.cursor.execute(sql, (like_pattern, like_pattern, like_pattern, limit, offset))
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "title": row[1],
+                    "image": row[2],
+                    "rating": row[3],
+                    "prepare_time": row[4],
+                }
+                for row in rows
+            ]
+        except Error as err:
+            print("Failed to search recipes:", err)
+            return []
+
+    def search_recipes_count(self, query: str):
+        """Return total count of recipes that match the search query."""
+        if not query or not query.strip():
+            return 0
+        like_pattern = f"%{query.strip()}%"
+        sql = """
+            select count(distinct r.recipe_id)
+            from Recipes r
+            left join Ingredients i on i.recipe_id = r.recipe_id
+            where r.status = 'active'
+              and (
+                  r.title like %s
+                  or r.category like %s
+                  or i.ingredient like %s
+              )
+        """
+        try:
+            self.cursor.execute(sql, (like_pattern, like_pattern, like_pattern))
+            row = self.cursor.fetchone()
+            return row[0] if row else 0
+        except Error as err:
+            print("Failed to count search recipes:", err)
+            return 0
 
     def fetch_user_recipes(self, user_id: int, limit=8):
         query = """

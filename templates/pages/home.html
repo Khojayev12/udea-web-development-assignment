@@ -9,11 +9,22 @@
         alt="home main background"
         class="home-main-hero-bg"
       />
-      <input
-        type="search"
-        class="main-hero-search"
-        placeholder="search for recipies..."
-      />
+      <div class="search-bar-wrapper hero-search-wrapper">
+        <form class="hero-search-form" action="{{ url_for('search') }}" method="get" data-search-form>
+          <input
+            type="search"
+            name="q"
+            class="main-hero-search"
+            placeholder="search for recipies..."
+            autocomplete="off"
+            data-search-input
+          />
+          <button class="main-hero-search-btn" type="submit" aria-label="Search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </button>
+        </form>
+        <div class="search-suggestions" data-search-suggestions></div>
+      </div>
       <button class="main-hero-add-btn">ADD RECIPE</button>
     </div>
     <div class="list-section-1">
