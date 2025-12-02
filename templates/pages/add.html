@@ -35,6 +35,19 @@
         </div>
 
         <div class="add-field">
+            <label class="add-label">Recipe Details</label>
+            <div class="add-grid-3">
+                <input class="add-input" name="category" type="text" placeholder="Category (e.g., Dinner)" required>
+                <select class="add-input" name="difficulty" required>
+                    <option value="" disabled selected>Select difficulty</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="difficult">Difficult</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="add-field">
             <label class="add-label">Ingredients</label>
             <div class="add-list-row">
                 <div class="add-list" id="ingredients-list">

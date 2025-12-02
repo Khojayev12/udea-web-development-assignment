@@ -137,6 +137,29 @@ class DBHandler():
             print("Failed to fetch popular recipes:", err)
             return []
 
+    def fetch_latest_recipe_by_difficulty(self, difficulty: str):
+        """Return the most recent active recipe for a given difficulty level."""
+        query = """
+            select recipe_id, title, cover_img_path
+            from Recipes
+            where status = 'active' and difficulty = %s
+            order by date_posted desc
+            limit 1
+        """
+        try:
+            self.cursor.execute(query, (difficulty,))
+            row = self.cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row[0],
+                "title": row[1],
+                "image": row[2]
+            }
+        except Error as err:
+            print("Failed to fetch latest recipe by difficulty:", err)
+            return None
+
     def fetch_inactive_recipes(self):
         """Return recipes that are not active for admin review."""
         query = """

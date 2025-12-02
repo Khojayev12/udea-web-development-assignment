@@ -72,18 +72,19 @@
     <div class="list-section-1">
       <a href="{{ url_for('feed') }}"><h2 class="list-section-title">COLLECTIONS</h2></a>
       <div class="list-section-1-item-group">
-        <div class="collection-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
-          <p class="collection-list-name">Chicken Pasta</p>
-        </div>
-        <div class="collection-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
-          <p class="collection-list-name">Chicken Pasta</p>
-        </div>
-        <div class="collection-list-item">
-          <img src="{{ registration_image }}" alt="Chicken Pasta illustration" class="collection-list-img" />
-          <p class="collection-list-name">Chicken Pasta</p>
-        </div>
+        {% for collection in difficulty_collections or [] %}
+          <a
+            class="collection-list-item"
+            href="{{ url_for('feed', difficulty=collection.difficulty) }}"
+          >
+            <img
+              src="{{ collection.image or registration_image }}"
+              alt="{{ collection.title }}"
+              class="collection-list-img"
+            />
+            <p class="collection-list-name">{{ collection.title }}</p>
+          </a>
+        {% endfor %}
       </div>
     </div>
 

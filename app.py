@@ -56,6 +56,24 @@ def authenticate_user(email: str, password: str):
     return None
 
 
+def build_difficulty_collections():
+    """Return home page collections for easy/medium/difficult recipes."""
+    difficulty_levels = [
+        {"value": "Easy", "title": "Easy recipes"},
+        {"value": "Medium", "title": "Medium recipes"},
+        {"value": "Difficult", "title": "Difficult recipes"},
+    ]
+    collections = []
+    for level in difficulty_levels:
+        latest = mydb.fetch_latest_recipe_by_difficulty(level["value"])
+        collections.append({
+            "title": level["title"],
+            "difficulty": level["value"],
+            "image": latest["image"] if latest else None,
+        })
+    return collections
+
+
 # adding comment, making change
 @app.route('/signout', methods=['GET', 'POST'])
 def signout():
@@ -70,7 +88,14 @@ def index():
     recent_recipes = mydb.fetch_recent_recipes()
     more_recipes = mydb.fetch_more_recipes()
     popular_recipes = mydb.fetch_popular_recipes()
-    return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
+    difficulty_collections = build_difficulty_collections()
+    return render_template(
+        'pages/home.html',
+        recent_recipes=recent_recipes,
+        more_recipes=more_recipes,
+        popular_recipes=popular_recipes,
+        difficulty_collections=difficulty_collections
+    )
 
 
 @app.route('/api/search')
@@ -260,7 +285,14 @@ def home():
     recent_recipes = mydb.fetch_recent_recipes()
     more_recipes = mydb.fetch_more_recipes()
     popular_recipes = mydb.fetch_popular_recipes()
-    return render_template('pages/home.html', recent_recipes=recent_recipes, more_recipes=more_recipes, popular_recipes=popular_recipes)
+    difficulty_collections = build_difficulty_collections()
+    return render_template(
+        'pages/home.html',
+        recent_recipes=recent_recipes,
+        more_recipes=more_recipes,
+        popular_recipes=popular_recipes,
+        difficulty_collections=difficulty_collections
+    )
 
 @app.route('/profile')
 def profile():
@@ -313,6 +345,10 @@ def add():
         ingredients_raw = request.form.getlist('ingredients[]')
         procedure_text = (request.form.get('procedure') or "").strip()
         tags = request.form.getlist('tags[]')
+        category = (request.form.get('category') or "").strip()
+        difficulty_raw = (request.form.get('difficulty') or "").strip().lower()
+        difficulty_options = {"easy": "Easy", "medium": "Medium", "difficult": "Difficult"}
+        difficulty = difficulty_options.get(difficulty_raw)
         prep_minutes_raw = request.form.get('prep_minutes')
         calories_raw = request.form.get('calories')
         ingredients = [i.strip() for i in ingredients_raw if i and i.strip()]
@@ -340,8 +376,11 @@ def add():
         prepare_time = parse_number(prep_minutes_raw)
         calories = parse_number(calories_raw)
 
-        if not title or not ingredients or not procedure_text:
-            error = "Title, ingredients, and procedure are required."
+        if not title or not ingredients or not procedure_text or not category:
+            error = "Title, category, ingredients, and procedure are required."
+            return render_template('pages/add.html', error=error)
+        if not difficulty:
+            error = "Please select a difficulty level."
             return render_template('pages/add.html', error=error)
 
         if photo_file and photo_file.filename:
@@ -364,6 +403,8 @@ def add():
             procedure=procedure_text,
             prepare_time=prepare_time,
             calories=calories,
+            category=category,
+            difficulty=difficulty,
             cover_img_path=cover_img_path,
             nutrition=nutrition_map,
             status="inactive",
