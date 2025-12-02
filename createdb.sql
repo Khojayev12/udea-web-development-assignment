@@ -119,4 +119,21 @@ CREATE TABLE IF NOT EXISTS Tags (
 CREATE INDEX ix_tag_recipe ON Tags(recipe_id);
 CREATE INDEX ix_tag_name   ON Tags(tag_name);
 
+-- NOTIFICATIONS
+CREATE TABLE IF NOT EXISTS Notifications (
+  notification_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT NOT NULL,
+  actor_id        INT NULL,
+  recipe_id       INT NULL,
+  type            ENUM('rating','follow','recipe_status') NOT NULL,
+  message         VARCHAR(255) NULL,
+  is_read         BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notif_user FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
+  CONSTRAINT fk_notif_actor FOREIGN KEY (actor_id) REFERENCES Users(user_id) ON DELETE SET NULL,
+  CONSTRAINT fk_notif_recipe FOREIGN KEY (recipe_id) REFERENCES Recipes(recipe_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE INDEX ix_notif_user_read ON Notifications(user_id, is_read, created_at);
+
 SET sql_notes = 1;

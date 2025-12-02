@@ -86,7 +86,7 @@ def test_git():
 @app.route('/')
 def index():
     recent_recipes = mydb.fetch_recent_recipes()
-    more_recipes = mydb.fetch_more_recipes()
+    more_recipes = mydb.fetch_recent_recipes(offset=4)
     popular_recipes = mydb.fetch_popular_recipes()
     difficulty_collections = build_difficulty_collections()
     return render_template(
@@ -122,13 +122,14 @@ def api_search():
 
 @app.route('/search')
 def search():
+    user_id, _ = get_current_user()
     query = (request.args.get('q') or "").strip()
     page_raw = request.args.get('page', '1')
     page = int(page_raw) if page_raw.isdigit() and int(page_raw) > 0 else 1
     per_page = 12
     offset = (page - 1) * per_page
 
-    recipes = mydb.search_recipes(query, limit=per_page, offset=offset) if query else []
+    recipes = mydb.search_recipes(query, limit=per_page, offset=offset, user_id=user_id) if query else []
     total_count = mydb.search_recipes_count(query) if query else 0
     total_pages = max(1, (total_count + per_page - 1) // per_page) if query else 1
     prev_page = page - 1 if page > 1 and page <= total_pages else None
@@ -148,6 +149,7 @@ def search():
 
 @app.route('/feed')
 def feed():
+    user_id, _ = get_current_user()
     category = request.args.get('category') or None
     difficulty = request.args.get('difficulty') or None
     max_time_raw = request.args.get('max_time')
@@ -162,7 +164,14 @@ def feed():
 
     filters = mydb.fetch_feed_filters()
     total_count = mydb.fetch_feed_count(category=category, difficulty=difficulty, max_time=max_time)
-    recipes = mydb.fetch_feed_recipes(category=category, difficulty=difficulty, max_time=max_time, limit=per_page, offset=offset)
+    recipes = mydb.fetch_feed_recipes(
+        category=category,
+        difficulty=difficulty,
+        max_time=max_time,
+        limit=per_page,
+        offset=offset,
+        user_id=user_id
+    )
     total_pages = max(1, (total_count + per_page - 1) // per_page)
     prev_page = page - 1 if page > 1 else None
     next_page = page + 1 if page < total_pages else None
@@ -179,6 +188,20 @@ def feed():
         prev_page=prev_page,
         next_page=next_page
     )
+
+@app.route('/api/recipes/<int:recipe_id>/favorite', methods=['POST', 'DELETE'])
+def api_favorite_recipe(recipe_id: int):
+    """Toggle a recipe in the current user's favorites or redirect to login."""
+    user_id, _ = get_current_user()
+    if not user_id:
+        return jsonify({"redirect": url_for('login')}), 401
+    if request.method == 'DELETE':
+        if not mydb.remove_recipe_like(user_id, recipe_id):
+            return jsonify({"error": "Unable to unlike recipe"}), 500
+        return jsonify({"liked": False})
+    if not mydb.add_recipe_like(user_id, recipe_id):
+        return jsonify({"error": "Unable to like recipe"}), 500
+    return jsonify({"liked": True})
 
 
 @app.route('/recipe/<int:recipe_id>', methods=['GET', 'POST'])
@@ -283,7 +306,7 @@ def home():
     if 'user' not in session:
         return redirect(url_for('login'))
     recent_recipes = mydb.fetch_recent_recipes()
-    more_recipes = mydb.fetch_more_recipes()
+    more_recipes = mydb.fetch_recent_recipes(offset=4)
     popular_recipes = mydb.fetch_popular_recipes()
     difficulty_collections = build_difficulty_collections()
     return render_template(
@@ -306,7 +329,7 @@ def profile_view(user_id: int):
     if not profile_data:
         abort(404)
 
-    session_user = session.get('user')
+    session_user, _ = get_current_user()
     is_owner = session_user == user_id
     if request.method == 'POST':
         if not session_user:
@@ -319,7 +342,7 @@ def profile_view(user_id: int):
         return redirect(url_for('profile_view', user_id=user_id))
 
     stats = mydb.fetch_user_stats(user_id)
-    recipes = mydb.fetch_user_recipes(user_id, limit=4)
+    recipes = mydb.fetch_user_recipes(user_id, limit=4, viewer_id=session_user)
     favorites = mydb.fetch_user_liked_recipes(user_id, limit=4) if is_owner else []
     is_following = False
     if session_user and not is_owner:
@@ -442,9 +465,9 @@ def admin_recipes():
         elif recipe_id_raw and recipe_id_raw.isdigit():
             recipe_id = int(recipe_id_raw)
             if action == 'activate':
-                mydb.update_recipe_status(recipe_id, 'active')
+                mydb.update_recipe_status(recipe_id, 'active', actor_id=user_id)
             elif action == 'delete':
-                mydb.delete_recipe(recipe_id)
+                mydb.delete_recipe(recipe_id, actor_id=user_id)
         return redirect(url_for('admin_recipes', reviews_page=request.args.get('reviews_page', '1')))
 
     pending_recipes = mydb.fetch_inactive_recipes()
@@ -473,7 +496,33 @@ def admin_recipes():
 def notifications():
     if 'user' not in session:
         return redirect(url_for('login'))
-    return render_template('pages/notifications.html')
+    user_id, _ = get_current_user()
+    items = mydb.fetch_unread_notifications(user_id)
+    return render_template('pages/notifications.html', notifications=items)
+
+
+@app.route('/notifications/mark-read', methods=['POST'])
+def notifications_mark_read():
+    user_id, _ = get_current_user()
+    if not user_id:
+        return jsonify({"redirect": url_for('login')}), 401
+    notif_id_raw = request.form.get('notification_id')
+    if not notif_id_raw or not notif_id_raw.isdigit():
+        return jsonify({"error": "Invalid id"}), 400
+    notif_id = int(notif_id_raw)
+    if mydb.mark_notification_read(user_id, notif_id):
+        return jsonify({"ok": True})
+    return jsonify({"error": "Not updated"}), 400
+
+
+@app.route('/notifications/mark-all', methods=['POST'])
+def notifications_mark_all():
+    user_id, _ = get_current_user()
+    if not user_id:
+        return jsonify({"redirect": url_for('login')}), 401
+    if mydb.mark_all_notifications_read(user_id):
+        return jsonify({"ok": True})
+    return jsonify({"error": "Not updated"}), 400
 
 
 @app.route('/login', methods=['GET', 'POST'])

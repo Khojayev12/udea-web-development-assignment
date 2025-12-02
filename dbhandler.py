@@ -68,31 +68,98 @@ class DBHandler():
             print("Failed to fetch recipe author:", err)
             return None
 
-    def fetch_recent_recipes(self, limit=4):
-        """Return a list of the most recent recipes with id, title, and cover image."""
+    def fetch_recipe_brief(self, recipe_id: int):
+        """Return basic recipe info (author, title) for notifications."""
+        try:
+            self.cursor.execute(
+                "select recipe_id, author_id, title from Recipes where recipe_id = %s",
+                (recipe_id,)
+            )
+            row = self.cursor.fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "author_id": row[1], "title": row[2]}
+        except Error as err:
+            print("Failed to fetch recipe brief:", err)
+            return None
+
+    def add_notification(self, user_id: int, notification_type: str, actor_id=None, recipe_id=None, message=None):
+        """Insert a new notification for a user."""
         query = """
-            select recipe_id, title, cover_img_path
-            from Recipes
-            where status = 'active'
-            order by date_posted desc
+            insert into Notifications (user_id, actor_id, recipe_id, type, message)
+            values (%s, %s, %s, %s, %s)
+        """
+        try:
+            self.cursor.execute(query, (user_id, actor_id, recipe_id, notification_type, message))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to add notification:", err)
+            self.cnx.rollback()
+            return False
+
+    def fetch_unread_notifications(self, user_id: int, limit=50):
+        """Fetch unread notifications for a user."""
+        query = """
+            select n.notification_id,
+                   n.type,
+                   n.message,
+                   n.created_at,
+                   n.recipe_id,
+                   n.actor_id,
+                   r.title,
+                   concat_ws(' ', ua.name, ua.surname) as actor_name
+            from Notifications n
+            left join Recipes r on n.recipe_id = r.recipe_id
+            left join Users ua on n.actor_id = ua.user_id
+            where n.user_id = %s and n.is_read = 0
+            order by n.created_at desc
             limit %s
         """
         try:
-            self.cursor.execute(query, (limit,))
+            self.cursor.execute(query, (user_id, limit))
             rows = self.cursor.fetchall()
             return [
                 {
                     "id": row[0],
-                    "title": row[1],
-                    "image": row[2]
+                    "type": row[1],
+                    "message": row[2],
+                    "created_at": row[3],
+                    "recipe_id": row[4],
+                    "actor_id": row[5],
+                    "recipe_title": row[6],
+                    "actor_name": row[7] or "Someone",
                 } for row in rows
             ]
         except Error as err:
-            print("Failed to fetch recent recipes:", err)
+            print("Failed to fetch notifications:", err)
             return []
 
-    def fetch_more_recipes(self, limit=4, offset=4):
-        """Return the next set of recent recipes after the top batch."""
+    def mark_notification_read(self, user_id: int, notification_id: int):
+        try:
+            self.cursor.execute(
+                "update Notifications set is_read = 1 where notification_id = %s and user_id = %s",
+                (notification_id, user_id)
+            )
+            self.cnx.commit()
+            return self.cursor.rowcount > 0
+        except Error as err:
+            print("Failed to mark notification read:", err)
+            self.cnx.rollback()
+            return False
+
+    def mark_all_notifications_read(self, user_id: int):
+        try:
+            self.cursor.execute("update Notifications set is_read = 1 where user_id = %s", (user_id,))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to mark all notifications read:", err)
+            self.cnx.rollback()
+            return False
+
+    def fetch_recent_recipes(self, limit=4, offset=0):
+        """Return a list of the most recent recipes with id, title, and cover image."""
         query = """
             select recipe_id, title, cover_img_path
             from Recipes
@@ -111,7 +178,7 @@ class DBHandler():
                 } for row in rows
             ]
         except Error as err:
-            print("Failed to fetch more recipes:", err)
+            print("Failed to fetch recent recipes:", err)
             return []
 
     def fetch_popular_recipes(self, limit=3):
@@ -188,14 +255,23 @@ class DBHandler():
             print("Failed to fetch inactive recipes:", err)
             return []
 
-    def update_recipe_status(self, recipe_id: int, status: str):
-        """Update a recipe's status."""
+    def update_recipe_status(self, recipe_id: int, status: str, actor_id=None):
+        """Update a recipe's status and notify author for approvals."""
         if status not in ("active", "inactive"):
             return False
+        recipe_brief = self.fetch_recipe_brief(recipe_id)
         query = "update Recipes set status = %s where recipe_id = %s"
         try:
             self.cursor.execute(query, (status, recipe_id))
             self.cnx.commit()
+            if status == "active" and recipe_brief and recipe_brief.get("author_id"):
+                self.add_notification(
+                    recipe_brief["author_id"],
+                    "recipe_status",
+                    actor_id=actor_id,
+                    recipe_id=recipe_id,
+                    message=f"Your recipe '{recipe_brief.get('title') or 'Recipe'}' was approved."
+                )
             return True
         except Error as err:
             print("Failed to update recipe status:", err)
@@ -213,11 +289,22 @@ class DBHandler():
             self.cnx.rollback()
             return False
 
-    def delete_recipe(self, recipe_id: int):
-        """Delete a recipe by id."""
+    def delete_recipe(self, recipe_id: int, actor_id=None):
+        """Delete a recipe by id and notify the author."""
+        recipe_brief = self.fetch_recipe_brief(recipe_id)
         try:
             self.cursor.execute("delete from Recipes where recipe_id = %s", (recipe_id,))
             self.cnx.commit()
+            author_id = recipe_brief.get("author_id") if recipe_brief else None
+            title = recipe_brief.get("title") if recipe_brief else None
+            if author_id:
+                self.add_notification(
+                    author_id,
+                    "recipe_status",
+                    actor_id=actor_id,
+                    recipe_id=recipe_id,
+                    message=f"Your recipe '{title or 'Recipe'}' was deleted by admin."
+                )
             return True
         except Error as err:
             print("Failed to delete recipe:", err)
@@ -410,14 +497,24 @@ class DBHandler():
             raise
 
     def add_rating(self, recipe_id: int, user_id: int, rating: int, comment: str = ""):
-        """Insert a new rating, then refresh recipe and author aggregates."""
+        """Insert a new rating, then refresh recipe and author aggregates and notify author."""
         try:
+            recipe_brief = self.fetch_recipe_brief(recipe_id)
             self.cursor.execute(
                 "insert into Ratings (recipe_id, user_id, rating, comment) values (%s, %s, %s, %s)",
                 (recipe_id, user_id, rating, comment),
             )
             self.recalc_recipe_rating(recipe_id, auto_commit=False)
             self.cnx.commit()
+            author_id = recipe_brief.get("author_id") if recipe_brief else None
+            if author_id and author_id != user_id:
+                self.add_notification(
+                    author_id,
+                    "rating",
+                    actor_id=user_id,
+                    recipe_id=recipe_id,
+                    message=comment or None
+                )
             return True
         except Error as err:
             print("Failed to add rating:", err)
@@ -488,14 +585,20 @@ class DBHandler():
             self.cnx.rollback()
             return False
 
-    def fetch_feed_recipes(self, category=None, difficulty=None, max_time=None, limit=12, offset=0):
+    def fetch_feed_recipes(self, category=None, difficulty=None, max_time=None, limit=12, offset=0, user_id=None):
         """Fetch recipes for the feed with optional filters."""
         base = [
-            "select recipe_id, title, cover_img_path, rating, prepare_time",
-            "from Recipes",
-            "where 1=1"
+            "select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time"
         ]
         params = []
+        if user_id:
+            base.append(
+                ", exists(select 1 from Likes l where l.recipe_id = r.recipe_id and l.user_id = %s) as is_liked"
+            )
+            params.append(user_id)
+        base.append(
+            "from Recipes r where 1=1"
+        )
         if category:
             base.append("and category = %s")
             params.append(category)
@@ -519,7 +622,8 @@ class DBHandler():
                     "title": row[1],
                     "image": row[2],
                     "rating": row[3],
-                    "prepare_time": row[4]
+                    "prepare_time": row[4],
+                    "is_favorited": bool(row[5]) if user_id else False
                 } for row in rows
             ]
         except Error as err:
@@ -631,13 +735,14 @@ class DBHandler():
             print("Failed to fetch user stats:", err)
         return stats
 
-    def search_recipes(self, query: str, limit: int = 12, offset: int = 0):
+    def search_recipes(self, query: str, limit: int = 12, offset: int = 0, user_id=None):
         """Search recipes by title, ingredient, or category for active recipes."""
         if not query or not query.strip():
             return []
         like_pattern = f"%{query.strip()}%"
         sql = """
             select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
+            {liked_select}
             from Recipes r
             left join Ingredients i on i.recipe_id = r.recipe_id
             where r.status = 'active'
@@ -651,7 +756,13 @@ class DBHandler():
             limit %s offset %s
         """
         try:
-            self.cursor.execute(sql, (like_pattern, like_pattern, like_pattern, limit, offset))
+            liked_sql = ", exists(select 1 from Likes l where l.recipe_id = r.recipe_id and l.user_id = %s) as is_liked" if user_id else ""
+            final_sql = sql.format(liked_select=liked_sql)
+            params = []
+            if user_id:
+                params.append(user_id)
+            params.extend([like_pattern, like_pattern, like_pattern, limit, offset])
+            self.cursor.execute(final_sql, tuple(params))
             rows = self.cursor.fetchall()
             return [
                 {
@@ -660,6 +771,7 @@ class DBHandler():
                     "image": row[2],
                     "rating": row[3],
                     "prepare_time": row[4],
+                    "is_favorited": bool(row[5]) if user_id else False,
                 }
                 for row in rows
             ]
@@ -691,16 +803,23 @@ class DBHandler():
             print("Failed to count search recipes:", err)
             return 0
 
-    def fetch_user_recipes(self, user_id: int, limit=8):
+    def fetch_user_recipes(self, user_id: int, limit=8, viewer_id=None):
         query = """
-            select recipe_id, title, cover_img_path, rating, prepare_time
-            from Recipes
-            where author_id = %s and status = 'active'
+            select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
+            {liked_select}
+            from Recipes r
+            where r.author_id = %s and r.status = 'active'
             order by date_posted desc
             limit %s
         """
         try:
-            self.cursor.execute(query, (user_id, limit))
+            liked_sql = ", exists(select 1 from Likes l where l.recipe_id = r.recipe_id and l.user_id = %s) as is_liked" if viewer_id else ""
+            final_sql = query.format(liked_select=liked_sql)
+            params = []
+            if viewer_id:
+                params.append(viewer_id)
+            params.extend([user_id, limit])
+            self.cursor.execute(final_sql, tuple(params))
             rows = self.cursor.fetchall()
             return [
                 {
@@ -709,6 +828,7 @@ class DBHandler():
                     "image": row[2],
                     "rating": row[3],
                     "prepare_time": row[4],
+                    "is_favorited": bool(row[5]) if viewer_id else False,
                 } for row in rows
             ]
         except Error as err:
@@ -734,6 +854,7 @@ class DBHandler():
                     "image": row[2],
                     "rating": row[3],
                     "prepare_time": row[4],
+                    "is_favorited": True,
                 } for row in rows
             ]
         except Error as err:
@@ -787,6 +908,13 @@ class DBHandler():
         try:
             self.cursor.execute(query, (target_user_id, follower_id))
             self.cnx.commit()
+            if self.cursor.rowcount > 0:
+                self.add_notification(
+                    target_user_id,
+                    "follow",
+                    actor_id=follower_id,
+                    message=None
+                )
             return True
         except Error as err:
             print("Follow failed:", err)

@@ -1,14 +1,6 @@
 {% extends 'layout.html' %}
 
 {% block body%}
-{% set registration_img = url_for('static', filename='media/registration.png') %}
-{% set notifications = [
-    {"id": 1, "user": "laila", "action": "Commented", "message": "Yummy recipe... loved it. Thanks a lot for the quick and easy steps!", "time": "1 hour ago", "thumb": registration_img},
-    {"id": 2, "user": "jenny", "action": "Liked your Recipe", "message": "", "time": "1 hour ago", "thumb": registration_img},
-    {"id": 3, "user": "jess.izu", "action": "Started following you", "message": "", "time": "1 hour ago", "thumb": ""},
-    {"id": 4, "user": "tommy", "action": "Liked your Recipe", "message": "", "time": "1 hour ago", "thumb": registration_img}
-] %}
-
 <div class="notifications-page">
     <div class="notifications-header">
         <h1 class="notifications-title">Notifications</h1>
@@ -17,34 +9,42 @@
         </div>
     </div>
     <div class="notifications-list">
-        {% for item in notifications %}
-            {% set initial = item.user[:1] | upper %}
-            <article class="notification-card" data-notification-id="{{ item.id }}">
-                <div class="notification-avatar">
-                    <span>{{ initial }}</span>
-                </div>
-                <div class="notification-body">
-                    <p class="notification-heading">
-                        <span class="notification-name">{{ item.user }}</span>
-                        {{ item.action }}
-                    </p>
-                    {% if item.message %}
-                        <p class="notification-message">{{ item.message }}</p>
-                    {% endif %}
-                    <p class="notification-time">{{ item.time }}</p>
-                </div>
-                <div class="notification-side">
-                    <div class="notification-thumb{% if not item.thumb %} notification-thumb--placeholder{% endif %}">
-                        {% if item.thumb %}
-                            <img src="{{ item.thumb }}" alt="Notification thumbnail">
-                        {% else %}
-                            <span class="notification-thumb-placeholder-icon"><i class="fa-regular fa-bell"></i></span>
-                        {% endif %}
+        {% if notifications and notifications|length > 0 %}
+            {% for item in notifications %}
+                {% set initial = (item.actor_name or 'N')[:1] | upper %}
+                <article class="notification-card" data-notification-id="{{ item.id }}">
+                    <div class="notification-avatar">
+                        <span>{{ initial }}</span>
                     </div>
-                    <button class="notifications-btn notification-card-btn" type="button">Mark as read</button>
-                </div>
-            </article>
-        {% endfor %}
+                    <div class="notification-body">
+                        <p class="notification-heading">
+                            <span class="notification-name">{{ item.actor_name }}</span>
+                            {% if item.type == 'follow' %}
+                                started following you
+                            {% elif item.type == 'rating' %}
+                                rated/commented on your recipe {% if item.recipe_title %}“{{ item.recipe_title }}”{% endif %}
+                            {% elif item.type == 'recipe_status' %}
+                                update on your recipe {% if item.recipe_title %}“{{ item.recipe_title }}”{% endif %}
+                            {% else %}
+                                sent a notification
+                            {% endif %}
+                        </p>
+                        {% if item.message %}
+                            <p class="notification-message">{{ item.message }}</p>
+                        {% endif %}
+                        <p class="notification-time">
+                            {{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '' }}
+                        </p>
+                    </div>
+                    <div class="notification-side">
+                        <div class="notification-thumb notification-thumb--placeholder">
+                            <span class="notification-thumb-placeholder-icon"><i class="fa-regular fa-bell"></i></span>
+                        </div>
+                        <button class="notifications-btn notification-card-btn" type="button">Mark as read</button>
+                    </div>
+                </article>
+            {% endfor %}
+        {% endif %}
         <p class="notifications-empty" id="notifications-empty">You are all caught up.</p>
     </div>
 </div>
@@ -58,18 +58,28 @@
         emptyEl.style.display = hasCards ? 'none' : 'block'
     }
 
-    listEl.addEventListener('click', (event) => {
+    listEl.addEventListener('click', async (event) => {
         if (!event.target.classList.contains('notification-card-btn')) return
         const card = event.target.closest('.notification-card')
         if (card) {
-            card.remove()
-            updateEmptyState()
+            const id = card.dataset.notificationId
+            if (!id) return
+            const formData = new FormData()
+            formData.append('notification_id', id)
+            const res = await fetch("{{ url_for('notifications_mark_read') }}", { method: 'POST', body: formData })
+            if (res.ok) {
+                card.remove()
+                updateEmptyState()
+            }
         }
     })
 
-    markAllBtn.addEventListener('click', () => {
-        listEl.querySelectorAll('.notification-card').forEach((card) => card.remove())
-        updateEmptyState()
+    markAllBtn.addEventListener('click', async () => {
+        const res = await fetch("{{ url_for('notifications_mark_all') }}", { method: 'POST' })
+        if (res.ok) {
+            listEl.querySelectorAll('.notification-card').forEach((card) => card.remove())
+            updateEmptyState()
+        }
     })
 
     updateEmptyState()

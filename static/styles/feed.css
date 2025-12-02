@@ -305,6 +305,17 @@
   height: 26px;
 }
 
+.recipe-card__favorite.is-liked {
+  color: #e63946;
+  border-color: rgba(230, 57, 70, 0.6);
+  background-color: rgba(230, 57, 70, 0.08);
+}
+
+.recipe-card__favorite.is-liked .recipe-card__favorite-icon path {
+  fill: currentColor;
+  stroke: currentColor;
+}
+
 .recipe-card__body {
   padding: 16px 20px 24px;
 }
