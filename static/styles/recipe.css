@@ -104,10 +104,11 @@
   font-size: 16px;
 }
 .recipe-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 14px;
   margin-top: 12px;
+  flex-wrap: nowrap; /* keeps everything on a single row */
 }
 .recipe-hero-nutrition {
   margin-top: 18px;

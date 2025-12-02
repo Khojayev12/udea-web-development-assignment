@@ -25,10 +25,15 @@
         </form>
         <div class="search-suggestions" data-search-suggestions></div>
       </div>
-      <button class="main-hero-add-btn">ADD RECIPE</button>
+      <a
+        class="main-hero-add-btn"
+        href="{% if 'user' in session %}{{ url_for('add') }}{% else %}{{ url_for('login') }}{% endif %}"
+      >
+        ADD RECIPE
+      </a>
     </div>
     <div class="list-section-1">
-      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">New Recipes</h2></a>
+      <h2 class="list-section-title"><a href="{{ url_for('feed') }}">New Recipes</a></h2>
       <div class="list-section-1-item-group">
         {% if recent_recipes and recent_recipes|length > 0 %}
           {% for recipe in recent_recipes %}
@@ -49,7 +54,7 @@
     </div>
 
     <div class="list-section-1">
-      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">MORE RECIPES</h2></a>
+      <h2 class="list-section-title"><a href="{{ url_for('feed') }}">MORE RECIPES</a></h2>
       <div class="list-section-1-item-group">
         {% if more_recipes and more_recipes|length > 0 %}
           {% for recipe in more_recipes %}
@@ -70,7 +75,7 @@
     </div>
 
     <div class="list-section-1">
-      <a href="{{ url_for('feed') }}"><h2 class="list-section-title">COLLECTIONS</h2></a>
+      <h2 class="list-section-title"><a href="{{ url_for('feed') }}">COLLECTIONS</a></h2>
       <div class="list-section-1-item-group">
         {% for collection in difficulty_collections or [] %}
           <a
