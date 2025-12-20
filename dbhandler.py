@@ -446,6 +446,60 @@ class DBHandler():
             print("Failed to fetch recipe detail:", err)
             return None
 
+    def fetch_recommended_recipes(self, recipe_id: int, limit: int = 5):
+        """Return similar recipes based on shared ingredients, tags, category, or author."""
+        query = """
+            with base as (
+                select recipe_id, category, author_id
+                from Recipes
+                where recipe_id = %s
+            )
+            select
+                r.recipe_id,
+                r.title,
+                r.cover_img_path,
+                r.rating,
+                r.prepare_time,
+                (
+                    (case when r.category = b.category and b.category is not null then 1 else 0 end) +
+                    (case when r.author_id = b.author_id then 1 else 0 end) +
+                    (
+                        select count(*) from Ingredients i
+                        where i.recipe_id = r.recipe_id
+                          and i.ingredient in (select ingredient from Ingredients where recipe_id = b.recipe_id)
+                    ) +
+                    (
+                        select count(*) from Tags t
+                        where t.recipe_id = r.recipe_id
+                          and t.tag_name in (select tag_name from Tags where recipe_id = b.recipe_id)
+                    )
+                ) as score
+            from Recipes r
+            join base b
+            where r.recipe_id <> b.recipe_id
+              and r.status = 'active'
+            having score > 0
+            order by score desc, r.date_posted desc
+            limit %s
+        """
+        try:
+            self.cursor.execute(query, (recipe_id, limit))
+            rows = self.cursor.fetchall()
+            return [
+                {
+                    "id": row[0],
+                    "title": row[1],
+                    "image": row[2],
+                    "rating": row[3],
+                    "prepare_time": row[4],
+                    "is_favorited": False,
+                }
+                for row in rows
+            ]
+        except Error as err:
+            print("Failed to fetch recommended recipes:", err)
+            return []
+
     def recalc_user_rating(self, user_id: int, auto_commit: bool = True):
         """Recalculate average rating for a user based on their recipes' ratings."""
         try:
@@ -687,6 +741,60 @@ class DBHandler():
         except Error as err:
             print("Failed to fetch user basic:", err)
             return None
+
+    def fetch_user_profile_full(self, user_id: int):
+        """Return editable profile fields for a user."""
+        query = "select email, name, surname, about_me, profile_img_path from Users where user_id = %s"
+        try:
+            self.cursor.execute(query, (user_id,))
+            row = self.cursor.fetchone()
+            if not row:
+                return None
+            return {
+                "email": row[0],
+                "name": row[1],
+                "surname": row[2] or "",
+                "about": row[3] or "",
+                "profile_img_path": row[4]
+            }
+        except Error as err:
+            print("Failed to fetch full user profile:", err)
+            return None
+
+    def update_user_profile(self, user_id: int, *, email=None, password=None, name=None, surname=None, about=None, profile_img_path=None):
+        """Update editable user fields."""
+        updates = []
+        params = []
+        if email is not None:
+            updates.append("email = %s")
+            params.append(email)
+        if password is not None:
+            updates.append("password = %s")
+            params.append(password)
+        if name is not None:
+            updates.append("name = %s")
+            params.append(name)
+        if surname is not None:
+            updates.append("surname = %s")
+            params.append(surname)
+        if about is not None:
+            updates.append("about_me = %s")
+            params.append(about)
+        if profile_img_path is not None:
+            updates.append("profile_img_path = %s")
+            params.append(profile_img_path)
+        if not updates:
+            return False
+        params.append(user_id)
+        query = f"update Users set {', '.join(updates)} where user_id = %s"
+        try:
+            self.cursor.execute(query, tuple(params))
+            self.cnx.commit()
+            return True
+        except Error as err:
+            print("Failed to update user profile:", err)
+            self.cnx.rollback()
+            return False
 
     def fetch_user_stats(self, user_id: int):
         """Return basic stats for user profile."""

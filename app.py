@@ -298,7 +298,9 @@ def recipe(recipe_id: int):
         "is_admin": is_admin
     }
 
-    return render_template('pages/recipe.html', recipe=recipe_data)
+    recommendations = mydb.fetch_recommended_recipes(recipe_id, limit=5)
+
+    return render_template('pages/recipe.html', recipe=recipe_data, recommendations=recommendations)
 
 
 @app.route('/home', methods=['GET', 'POST'])
@@ -357,6 +359,72 @@ def profile_view(user_id: int):
         is_owner=is_owner,
         is_following=is_following
     )
+
+@app.route('/editprofile', methods=['GET', 'POST'])
+def edit_profile():
+    session_user, _ = get_current_user()
+    if not session_user:
+        return redirect(url_for('login'))
+
+    profile_data = mydb.fetch_user_profile_full(session_user) or {}
+    if not profile_data:
+        profile_data = {"email": "", "name": "", "surname": "", "about": "", "profile_img_path": None}
+    error = None
+    success = None
+
+    if request.method == 'POST':
+        name = (request.form.get('name') or "").strip()
+        surname = (request.form.get('surname') or "").strip()
+        email = (request.form.get('email') or "").strip().lower()
+        about = (request.form.get('about') or "").strip()
+        new_password = request.form.get('password') or ""
+        photo_file = request.files.get('photo')
+
+        if not name or not email:
+            error = "Name and email are required."
+        else:
+            profile_img_path = None
+            if photo_file and photo_file.filename:
+                filename = secure_filename(photo_file.filename)
+                ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+                allowed_ext = {"png", "jpg", "jpeg", "gif", "webp"}
+                if ext in allowed_ext:
+                    upload_dir = os.path.join(app.root_path, "static", "img", "profile")
+                    os.makedirs(upload_dir, exist_ok=True)
+                    final_name = f"{session_user}.{ext}"
+                    file_path = os.path.join(upload_dir, final_name)
+                    photo_file.save(file_path)
+                    profile_img_path = f"/static/img/profile/{final_name}"
+                else:
+                    error = "Please upload a valid image file."
+
+            hashed_password = generate_password_hash(new_password) if new_password else None
+
+            if not error:
+                updated = mydb.update_user_profile(
+                    session_user,
+                    email=email,
+                    password=hashed_password,
+                    name=name,
+                    surname=surname if surname else None,
+                    about=about if about else None,
+                    profile_img_path=profile_img_path
+                )
+                if updated:
+                    success = "Profile updated successfully."
+                    profile_data = mydb.fetch_user_profile_full(session_user) or profile_data
+                else:
+                    error = "Could not update profile. Please try again."
+
+        # refresh form values on error
+        profile_data.update({
+            "email": email,
+            "name": name,
+            "surname": surname,
+            "about": about,
+        })
+
+    return render_template('pages/edit_profile.html', profile=profile_data, error=error, success=success)
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():

@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block body%}
+<div class="add-page edit-profile-page">
+    <div class="add-header">
+        <h1 class="add-title">Edit Profile</h1>
+    </div>
+    {% if error %}
+        <p class="add-alert add-alert-error">{{ error }}</p>
+    {% elif success %}
+        <p class="add-alert add-alert-success">{{ success }}</p>
+    {% endif %}
+    <form class="add-form" action="{{ url_for('edit_profile') }}" method="post" enctype="multipart/form-data">
+        <div class="add-field">
+            <label class="add-label" for="photo">Profile Photo</label>
+            <div class="edit-profile-photo-row">
+                <div class="edit-profile-current">
+                    <span class="add-helper">Current photo</span>
+                    <img src="{{ profile.profile_img_path or url_for('static', filename='media/nouserphoto.png') }}" alt="Current profile photo">
+                </div>
+                <div class="add-photo-drop" style="flex:1;">
+                    <div class="add-photo-text">
+                        <p class="add-helper">Upload a new profile photo</p>
+                        <p class="add-helper">Accepted: JPG, PNG, WEBP, GIF</p>
+                    </div>
+                    <div class="add-photo-actions">
+                        <label class="add-photo-btn" for="photo">Select photo</label>
+                        <span class="add-helper" id="photo-filename">No file selected</span>
+                    </div>
+                    <div class="add-photo-preview" id="photo-preview-wrapper" aria-live="polite">
+                        <img id="photo-preview" alt="Profile preview" />
+                    </div>
+                    <input id="photo" name="photo" type="file" accept="image/*" style="display:none" />
+                </div>
+            </div>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label">Basic Info</label>
+            <div class="add-grid-3">
+                <input class="add-input" name="name" type="text" placeholder="Name" value="{{ profile.name }}" required>
+                <input class="add-input" name="surname" type="text" placeholder="Surname" value="{{ profile.surname }}">
+                <input class="add-input" name="email" type="email" placeholder="Email" value="{{ profile.email }}" required>
+            </div>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label" for="about">About You</label>
+            <textarea class="add-textarea" id="about" name="about" placeholder="Tell others about you">{{ profile.about }}</textarea>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label" for="password">Password</label>
+            <input class="add-input" id="password" name="password" type="password" placeholder="New password (leave blank to keep current)">
+            <p class="edit-profile-note">Leave empty if you do not want to change your password.</p>
+        </div>
+
+        <div class="edit-profile-actions">
+            <a class="edit-profile-back" href="{{ url_for('profile_view', user_id=session.get('user')) }}">Back to Profile</a>
+            <button class="add-submit" type="submit">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const photoInput = document.getElementById('photo')
+    const photoPreview = document.getElementById('photo-preview')
+    const photoPreviewWrapper = document.getElementById('photo-preview-wrapper')
+    const photoFilename = document.getElementById('photo-filename')
+
+    const updatePhotoPreview = () => {
+        const file = photoInput.files && photoInput.files[0]
+        if (!file) {
+            photoPreviewWrapper.classList.remove('is-visible')
+            photoPreview.src = ''
+            photoFilename.textContent = 'No file selected'
+            return
+        }
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            photoPreview.src = e.target.result
+            photoPreviewWrapper.classList.add('is-visible')
+            photoFilename.textContent = file.name
+        }
+        reader.readAsDataURL(file)
+    }
+
+    photoInput.addEventListener('change', updatePhotoPreview)
+</script>
+{% endblock %}

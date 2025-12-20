@@ -75,6 +75,9 @@
 
 .profile-edit-btn {
   width: 250px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
   color: black;
   font-family: "Montserrat";
   font-size: clamp(24px, 2.1vw, 23px);
@@ -86,6 +89,7 @@
   border-radius: 8px;
   cursor: pointer;
   transition: transform 0.3s ease, background-color 0.3s ease;
+  text-decoration: none;
 }
 .profile-edit-btn:hover {
   background-color: gold;

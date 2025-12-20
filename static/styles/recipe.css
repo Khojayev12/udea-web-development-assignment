@@ -315,13 +315,15 @@
   cursor: pointer;
 }
 .recipe-recommendations {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-}
-.recipe-recommendation-card {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+}
+@media (max-width: 640px) {
+  .recipe-recommendations {
+    justify-content: center;
+  }
 }
 
 @media (max-width: 900px) {

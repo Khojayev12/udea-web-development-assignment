@@ -2,6 +2,7 @@
 
 {% block body %}
 {% set image_src = recipe.image if recipe and recipe.image else url_for('static', filename='media/registration.png') %}
+{% set card_image = url_for('static', filename='media/registration.png') %}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles/recipe.css') }}">
 <div class="recipe-page">
     <section class="recipe-hero">
@@ -153,11 +154,50 @@
     <section class="recipe-section">
         <h3 class="recipe-section-title">You May Also Like</h3>
         <div class="recipe-recommendations">
-            {% for _ in range(0, 4) %}
-                <div class="recipe-recommendation-card">
-                    {% set template = './components/feedcard.html' %} {% include template %}
-                </div>
-            {% endfor %}
+            {% if recommendations and recommendations|length > 0 %}
+                {% for rec in recommendations %}
+                    <a class="recipe-card" href="{{ url_for('recipe', recipe_id=rec.id) }}">
+                        <div class="recipe-card__image-wrapper">
+                            <img
+                                class="recipe-card__image"
+                                src="{{ rec.image or card_image }}"
+                                alt="{{ rec.title }}"
+                            >
+                            <button
+                                class="recipe-card__favorite {% if rec.is_favorited %}is-liked{% endif %}"
+                                type="button"
+                                aria-label="Save {{ rec.title }}"
+                                aria-pressed="{{ 'true' if rec.is_favorited else 'false' }}"
+                                data-recipe-id="{{ rec.id }}"
+                                data-liked="{{ 'true' if rec.is_favorited else 'false' }}"
+                                disabled
+                                style="pointer-events: none;"
+                            >
+                                <svg class="recipe-card__favorite-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M12.1 20.3a1 1 0 0 1-1.2 0C6.1 16.9 3 13.9 3 10.2 3 7.5 5.2 5 8.3 5c1.5 0 2.9.7 3.7 1.9C12.9 5.7 14.3 5 15.8 5 19 5 21 7.5 21 10.2c0 3.7-3.1 6.7-7.9 10.1z"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.7"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="recipe-card__body">
+                            <h3 class="recipe-card__title">{{ rec.title }}</h3>
+                            <p class="recipe-card__author">{{ rec.prepare_time or 0 }} min</p>
+                            <div class="recipe-card__rating" aria-label="Rated {{ rec.rating or 0 }} out of five stars">
+                                {% set rating_int = (rec.rating or 0)|int %}
+                                {% for _ in range(0, 5) %}
+                                    <span class="rating-star {% if loop.index <= rating_int %}is-filled{% endif %}"></span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            {% else %}
+                <p>No related recipes yet.</p>
+            {% endif %}
         </div>
     </section>
 </div>
