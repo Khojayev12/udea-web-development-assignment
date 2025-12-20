@@ -47,10 +47,12 @@
       {{ profile.about if profile.about else 'No bio added yet.' }}
    </div>
    <div class="profile-stats-div" >
+      {% if is_owner %}
       <div class="profile-stat-block" >
          <h2 class="profile-stat-block-t" >{{ stats.likes }}</h2>
          <p class="profile-stat-block-d">Likes</p>
       </div>
+      {% endif %}
       <div class="profile-stat-block" >
          <h2 class="profile-stat-block-t" >{{ stats.followers }}</h2>
          <p class="profile-stat-block-d">Followers</p>

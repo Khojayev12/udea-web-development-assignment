@@ -5,7 +5,7 @@ class DBHandler():
     def __init__(self):
         try:
             self.cnx = mysql.connector.connect(user='root', password='Scripter1211#',
-                                host='localhost', port='3306',
+                                host='khoja.jprq.live', port='35399',
                                 database='recipedb')
             self.cursor = self.cnx.cursor()
             print("DBhandler initiated")
