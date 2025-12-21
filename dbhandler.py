@@ -4,9 +4,9 @@ from mysql.connector import Error
 class DBHandler():
     def __init__(self):
         try:
-            self.cnx = mysql.connector.connect(user='root', password='Scripter1211#',
-                                host='khoja.jprq.live', port='35399',
-                                database='recipedb')
+            self.cnx = mysql.connector.connect(user='khoja12', password='Xoja1211#',
+                                host='khoja12.mysql.pythonanywhere-services.com', port='3306',
+                                database='khoja12$default')
             self.cursor = self.cnx.cursor()
             print("DBhandler initiated")
             self._user_rating_column = None
