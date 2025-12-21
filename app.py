@@ -1,10 +1,30 @@
 import os
 import uuid
+from pathlib import Path
 from flask import Flask, render_template, redirect, request, url_for, jsonify, session, abort
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from dbhandler import DBHandler
+
+
+def load_env_file(filepath=".env"):
+    """Simple .env loader: key=value pairs, ignores comments/blank lines."""
+    env_path = Path(filepath)
+    if not env_path.exists():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'").strip('"')
+        if key and not os.environ.get(key):
+            os.environ[key] = value
+
+
+load_env_file()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
