@@ -1,12 +1,17 @@
+import os
 import mysql.connector
 from mysql.connector import Error
 
 class DBHandler():
     def __init__(self):
         try:
-            self.cnx = mysql.connector.connect(user='khoja12', password='Xoja1211#',
-                                host='khoja12.mysql.pythonanywhere-services.com', port='3306',
-                                database='khoja12$default')
+            self.cnx = mysql.connector.connect(
+                user=os.environ.get('DB_USER', 'khoja12'),
+                password=os.environ.get('DB_PASSWORD', ''),
+                host=os.environ.get('DB_HOST', 'khoja12.mysql.pythonanywhere-services.com'),
+                port=os.environ.get('DB_PORT', '3306'),
+                database=os.environ.get('DB_NAME', 'khoja12$default')
+            )
             self.cursor = self.cnx.cursor()
             print("DBhandler initiated")
             self._user_rating_column = None
@@ -759,6 +764,18 @@ class DBHandler():
             }
         except Error as err:
             print("Failed to fetch full user profile:", err)
+            return None
+
+    def fetch_user_credentials(self, user_id: int):
+        """Return email and password hash for a user."""
+        try:
+            self.cursor.execute("select email, password from Users where user_id = %s", (user_id,))
+            row = self.cursor.fetchone()
+            if not row:
+                return None
+            return {"email": row[0], "password_hash": row[1]}
+        except Error as err:
+            print("Failed to fetch user credentials:", err)
             return None
 
     def update_user_profile(self, user_id: int, *, email=None, password=None, name=None, surname=None, about=None, profile_img_path=None):

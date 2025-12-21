@@ -10,6 +10,7 @@
             <p class="admin-recipes-subtitle">Approve or delete recipes waiting for activation.</p>
         </div>
         <form method="post" action="{{ url_for('admin_recipes') }}" class="admin-bulk-actions">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="action" value="activate_all">
             <button class="admin-approve-btn" type="submit">Approve All Pending</button>
         </form>
@@ -41,11 +42,13 @@
                     </a>
                     <div class="admin-card-actions">
                         <form method="post" action="{{ url_for('admin_recipes') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
                             <input type="hidden" name="action" value="activate">
                             <button class="admin-approve-btn" type="submit">Activate</button>
                         </form>
                         <form method="post" action="{{ url_for('admin_recipes') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="recipe_id" value="{{ recipe.id }}">
                             <input type="hidden" name="action" value="delete">
                             <button class="admin-delete-btn" type="submit">Delete</button>
@@ -91,6 +94,7 @@
                                 <td>{{ review.recipe_title }}</td>
                                 <td>
                                     <form method="post" action="{{ url_for('admin_recipes', reviews_page=reviews_page) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="delete_rating">
                                         <input type="hidden" name="rate_id" value="{{ review.id }}">
                                         <button class="admin-delete-btn" type="submit">Delete</button>

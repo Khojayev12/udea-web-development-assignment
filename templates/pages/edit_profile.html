@@ -11,6 +11,7 @@
         <p class="add-alert add-alert-success">{{ success }}</p>
     {% endif %}
     <form class="add-form" action="{{ url_for('edit_profile') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="add-field">
             <label class="add-label" for="photo">Profile Photo</label>
             <div class="edit-profile-photo-row">
@@ -47,6 +48,11 @@
         <div class="add-field">
             <label class="add-label" for="about">About You</label>
             <textarea class="add-textarea" id="about" name="about" placeholder="Tell others about you">{{ profile.about }}</textarea>
+        </div>
+
+        <div class="add-field">
+            <label class="add-label" for="current_password">Current Password</label>
+            <input class="add-input" id="current_password" name="current_password" type="password" placeholder="Required to change email or password">
         </div>
 
         <div class="add-field">

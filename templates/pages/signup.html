@@ -14,6 +14,7 @@
         <div class="reg-main-left">
             <form action="{{ url_for('signup') }}" class="reg-login-form" method="post">
                 <label for="form" class="reg-main-label">SIGN UP</label>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="text" name="name" placeholder="Name" class="reg-input" value="{{ request.form.get('name', '') }}" required>
                 <input type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
                 <input type="password" name="password" placeholder="Password" class="reg-input" required>

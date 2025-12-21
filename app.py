@@ -1,11 +1,21 @@
 import os
 import uuid
+import imghdr
 from flask import Flask, render_template, redirect, request, url_for, jsonify, session, abort
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from dbhandler import DBHandler
+
 app = Flask(__name__)
-app.secret_key = "mytestkey"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
+app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_SIZE
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE", "false").lower() == "true",
+)
 mydb = DBHandler()
 
 
@@ -38,6 +48,32 @@ def get_current_user():
     return user_id, role
 
 
+def generate_csrf_token():
+    token = session.get("csrf_token")
+    if not token:
+        token = uuid.uuid4().hex
+        session["csrf_token"] = token
+    return token
+
+
+@app.before_request
+def csrf_protect():
+    if request.method == "POST":
+        session_token = session.get("csrf_token")
+        form_token = request.form.get("csrf_token")
+        header_token = request.headers.get("X-CSRFToken") or request.headers.get("X-CSRF-Token")
+        json_payload = request.get_json(silent=True) or {}
+        json_token = json_payload.get("csrf_token") if isinstance(json_payload, dict) else None
+        token = form_token or header_token or json_token
+        if not session_token or not token or session_token != token:
+            abort(400)
+
+
+@app.context_processor
+def inject_csrf():
+    return {"csrf_token": generate_csrf_token}
+
+
 def create_user_account(name: str, email: str, password: str) -> bool:
     """Create a new user account and return True on success."""
     if not all([name, email, password]):
@@ -54,6 +90,32 @@ def authenticate_user(email: str, password: str):
     if user_record and check_password_hash(user_record[1], password):
         return user_record[0]
     return None
+
+
+def validate_image_file(upload_file, allowed_ext):
+    """Validate uploaded image file for size and type; return (ext, error_message)."""
+    if not upload_file or not upload_file.filename:
+        return None, "No file provided."
+    filename = secure_filename(upload_file.filename)
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if ext not in allowed_ext:
+        return None, "Please upload a valid image file."
+
+    upload_file.stream.seek(0, os.SEEK_END)
+    size = upload_file.stream.tell()
+    upload_file.stream.seek(0)
+    if size > MAX_UPLOAD_SIZE:
+        return None, "Image is too large. Please upload a file under 10MB."
+
+    header = upload_file.read(512)
+    upload_file.seek(0)
+    detected = imghdr.what(None, header)
+    if detected == "jpeg":
+        detected = "jpg"
+    if detected not in allowed_ext:
+        return None, "Please upload a valid image file."
+
+    return ext, None
 
 
 def build_difficulty_collections():
@@ -79,6 +141,11 @@ def build_difficulty_collections():
 def signout():
     session.clear()
     return redirect(url_for('index'))
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_large_file(e):
+    return "File too large. Maximum upload size is 10MB.", 413
 
 def test_git():
     pass
@@ -371,6 +438,7 @@ def edit_profile():
         profile_data = {"email": "", "name": "", "surname": "", "about": "", "profile_img_path": None}
     error = None
     success = None
+    current_creds = mydb.fetch_user_credentials(session_user) or {}
 
     if request.method == 'POST':
         name = (request.form.get('name') or "").strip()
@@ -378,27 +446,32 @@ def edit_profile():
         email = (request.form.get('email') or "").strip().lower()
         about = (request.form.get('about') or "").strip()
         new_password = request.form.get('password') or ""
+        current_password = request.form.get('current_password') or ""
         photo_file = request.files.get('photo')
+        allowed_ext = {"png", "jpg", "jpeg", "gif", "webp"}
 
         if not name or not email:
             error = "Name and email are required."
         else:
             profile_img_path = None
             if photo_file and photo_file.filename:
-                filename = secure_filename(photo_file.filename)
-                ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-                allowed_ext = {"png", "jpg", "jpeg", "gif", "webp"}
-                if ext in allowed_ext:
-                    upload_dir = os.path.join(app.root_path, "static", "img", "profile")
-                    os.makedirs(upload_dir, exist_ok=True)
-                    final_name = f"{session_user}.{ext}"
-                    file_path = os.path.join(upload_dir, final_name)
-                    photo_file.save(file_path)
-                    profile_img_path = f"/static/img/profile/{final_name}"
-                else:
-                    error = "Please upload a valid image file."
+                ext, validation_error = validate_image_file(photo_file, allowed_ext)
+                if validation_error:
+                    return render_template('pages/edit_profile.html', profile=profile_data, error=validation_error, success=None)
+                upload_dir = os.path.join(app.root_path, "static", "img", "profile")
+                os.makedirs(upload_dir, exist_ok=True)
+                final_name = f"{session_user}.{ext}"
+                file_path = os.path.join(upload_dir, final_name)
+                photo_file.save(file_path)
+                profile_img_path = f"/static/img/profile/{final_name}"
 
             hashed_password = generate_password_hash(new_password) if new_password else None
+
+            if (new_password or email != current_creds.get("email")):
+                stored_hash = current_creds.get("password_hash")
+                if not current_password or not stored_hash or not check_password_hash(stored_hash, current_password):
+                    error = "Current password is required to change email or password."
+                    return render_template('pages/edit_profile.html', profile=profile_data, error=error, success=None)
 
             if not error:
                 updated = mydb.update_user_profile(
@@ -475,18 +548,15 @@ def add():
             return render_template('pages/add.html', error=error)
 
         if photo_file and photo_file.filename:
-            filename = secure_filename(photo_file.filename)
-            ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-            if ext in allowed_ext:
-                upload_dir = os.path.join(app.root_path, "static", "media", "recipes")
-                os.makedirs(upload_dir, exist_ok=True)
-                final_name = f"{uuid.uuid4().hex}_{filename}"
-                file_path = os.path.join(upload_dir, final_name)
-                photo_file.save(file_path)
-                cover_img_path = f"/static/media/recipes/{final_name}"
-            else:
-                error = "Please upload a valid image file."
-                return render_template('pages/add.html', error=error)
+            ext, error_message = validate_image_file(photo_file, allowed_ext)
+            if error_message:
+                return render_template('pages/add.html', error=error_message)
+            upload_dir = os.path.join(app.root_path, "static", "media", "recipes")
+            os.makedirs(upload_dir, exist_ok=True)
+            final_name = f"{uuid.uuid4().hex}.{ext}"
+            file_path = os.path.join(upload_dir, final_name)
+            photo_file.save(file_path)
+            cover_img_path = f"/static/media/recipes/{final_name}"
 
         recipe_id = mydb.create_recipe(
             title=title,
@@ -633,4 +703,4 @@ def signup():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000)
+    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=8000)

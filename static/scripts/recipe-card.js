@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const favoriteButtons = document.querySelectorAll(".recipe-card__favorite");
+  const csrfToken =
+    document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
 
   const handleFavorite = async (event) => {
     event.preventDefault();
@@ -18,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method,
         headers: {
           "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRFToken": csrfToken } : {}),
         },
       });
 
