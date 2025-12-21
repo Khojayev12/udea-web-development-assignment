@@ -567,11 +567,20 @@
   .feed-list-actions {
     justify-content: flex-start;
   }
+  .feed-filter-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
   .feed-mobile-filter-btn {
     display: inline-flex;
   }
   .feed-list-page {
     justify-content: center;
+  }
+  .feed-reset-btn {
+    width: 100%;
+    text-align: center;
+    font-size: 15px;
   }
   .feed-pagination {
     justify-content: space-between;

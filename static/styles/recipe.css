@@ -336,6 +336,17 @@
   opacity: 1;
 }
 @media (max-width: 640px) {
+  .recipe-title-row {
+    align-items: flex-start;
+  }
+  .recipe-favorite-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+  }
+  .recipe-favorite-form {
+    margin-left: auto;
+  }
   .recipe-recommendations {
     justify-content: center;
   }

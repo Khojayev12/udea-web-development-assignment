@@ -236,4 +236,21 @@
   .add-form {
     padding: 20px 18px 26px;
   }
+  .add-list-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .add-list-item {
+    flex-wrap: wrap;
+  }
+  .add-small-input {
+    min-width: 100%;
+  }
+  .add-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .add-plus-btn,
+  .add-remove-btn {
+    align-self: flex-start;
+  }
 }

@@ -433,10 +433,20 @@ a{
         min-height: 400px;
     }
 
+    .hero-search-wrapper {
+        width: 94%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
     .hero-search-wrapper .main-hero-search {
-        width: 82%;
+        width: 100%;
         max-width: 520px;
-        padding: 18px 22px;
+        padding: 18px 56px 18px 18px;
+    }
+    .main-hero-search-btn {
+        right: 8px;
+        width: 42px;
+        height: 42px;
     }
 
     .main-hero-add-btn {
