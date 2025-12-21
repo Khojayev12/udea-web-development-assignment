@@ -242,6 +242,7 @@
   }
   .add-list-item {
     flex-wrap: wrap;
+    width: 100%;
   }
   .add-small-input {
     min-width: 100%;
@@ -252,5 +253,13 @@
   .add-plus-btn,
   .add-remove-btn {
     align-self: flex-start;
+  }
+  .add-list-row .add-list {
+    width: 100%;
+  }
+  .add-plus-btn,
+  .add-remove-btn {
+    width: 36px;
+    height: 36px;
   }
 }

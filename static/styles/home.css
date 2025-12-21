@@ -56,6 +56,7 @@ a{
     display: flex;
     align-items: center;
     width: 100%;
+    z-index: 1;
 }
 
 .main-hero-search {
@@ -434,19 +435,19 @@ a{
     }
 
     .hero-search-wrapper {
-        width: 94%;
+        width: 96%;
         left: 50%;
         transform: translate(-50%, -50%);
     }
     .hero-search-wrapper .main-hero-search {
         width: 100%;
         max-width: 520px;
-        padding: 18px 56px 18px 18px;
+        padding: 16px 64px 16px 18px;
     }
     .main-hero-search-btn {
-        right: 8px;
-        width: 42px;
-        height: 42px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
     }
 
     .main-hero-add-btn {
@@ -542,11 +543,22 @@ a{
         font-size: 38px;
     }
 
+    .hero-search-wrapper {
+        width: 100%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 0 10px;
+    }
     .hero-search-wrapper .main-hero-search {
-        width: 88%;
+        width: 100%;
         font-size: 18px;
         min-height: auto;
-        padding: 10px 22px;
+        padding: 12px 58px 12px 16px;
+    }
+    .main-hero-search-btn {
+        right: 12px;
+        width: 36px;
+        height: 36px;
     }
 
     .main-hero-add-btn {
