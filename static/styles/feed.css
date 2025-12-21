@@ -273,6 +273,21 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: opacity 0.3s ease;
+}
+.lazy-image {
+  background: linear-gradient(120deg, #f4f4f4 25%, #e8e8e8 37%, #f4f4f4 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  opacity: 0;
+}
+.lazy-image.is-loaded {
+  animation: none;
+  opacity: 1;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .recipe-card__favorite {

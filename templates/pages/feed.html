@@ -157,7 +157,9 @@
                     <a class="recipe-card" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
                         <div class="recipe-card__image-wrapper">
                             <img
-                                class="recipe-card__image"
+                                class="recipe-card__image lazy-image"
+                                data-lazy-image
+                                loading="lazy"
                                 src="{{ recipe.image or card_image }}"
                                 alt="{{ recipe.title }}"
                             >

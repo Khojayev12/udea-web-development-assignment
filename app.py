@@ -1,6 +1,5 @@
 import os
 import uuid
-import imghdr
 from flask import Flask, render_template, redirect, request, url_for, jsonify, session, abort
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -109,13 +108,24 @@ def validate_image_file(upload_file, allowed_ext):
 
     header = upload_file.read(512)
     upload_file.seek(0)
-    detected = imghdr.what(None, header)
-    if detected == "jpeg":
-        detected = "jpg"
+    detected = detect_image_type(header)
     if detected not in allowed_ext:
         return None, "Please upload a valid image file."
 
     return ext, None
+
+
+def detect_image_type(header_bytes: bytes):
+    """Simple signature-based image detection for png/jpg/gif/webp."""
+    if header_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if header_bytes[:3] == b"\xff\xd8\xff":
+        return "jpg"
+    if header_bytes.startswith(b"GIF87a") or header_bytes.startswith(b"GIF89a"):
+        return "gif"
+    if header_bytes[8:12] == b"WEBP" or header_bytes.startswith(b"RIFF") and header_bytes[8:12] == b"WEBP":
+        return "webp"
+    return None
 
 
 def build_difficulty_collections():
@@ -702,5 +712,5 @@ def signup():
 # API CALLS
 
 
-if __name__ == '__main__':
-    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=8000)
+
+app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=8000)

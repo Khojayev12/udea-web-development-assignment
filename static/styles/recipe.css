@@ -151,6 +151,7 @@
   border-radius: 14px;
   object-fit: cover;
   box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.08);
+  transition: opacity 0.3s ease;
 }
 .recipe-section {
   margin-top: 36px;
@@ -319,6 +320,20 @@
   flex-wrap: wrap;
   gap: 20px;
   justify-content: space-between;
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.lazy-image {
+  background: linear-gradient(120deg, #f4f4f4 25%, #e8e8e8 37%, #f4f4f4 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+  opacity: 0;
+}
+.lazy-image.is-loaded {
+  animation: none;
+  opacity: 1;
 }
 @media (max-width: 640px) {
   .recipe-recommendations {
