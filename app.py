@@ -18,7 +18,8 @@ def load_env_file(filepath=".env"):
         # Try relative to project root
         env_path = BASE_DIR / filepath
         if not env_path.exists():
-            return
+            return False
+    loaded = 0
     for line in env_path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -28,9 +29,16 @@ def load_env_file(filepath=".env"):
         value = value.strip().strip("'").strip('"')
         if key and not os.environ.get(key):
             os.environ[key] = value
+            loaded += 1
+    print(f"Loaded {loaded} env vars from {env_path}")
+    return True
 
 
-#load_env_file()
+_env_loaded = load_env_file()
+required_env = ["DB_USER", "DB_PASSWORD", "DB_HOST", "DB_NAME"]
+missing_required = [k for k in required_env if not os.environ.get(k)]
+if missing_required:
+    raise RuntimeError(f"Missing required environment variables: {', '.join(missing_required)}. Ensure .env exists at {BASE_DIR / '.env'} or variables are set.")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
