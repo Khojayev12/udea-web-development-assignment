@@ -8,11 +8,17 @@ from werkzeug.utils import secure_filename
 from dbhandler import DBHandler
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
 def load_env_file(filepath=".env"):
     """Simple .env loader: key=value pairs, ignores comments/blank lines."""
     env_path = Path(filepath)
     if not env_path.exists():
-        return
+        # Try relative to project root
+        env_path = BASE_DIR / filepath
+        if not env_path.exists():
+            return
     for line in env_path.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -24,7 +30,7 @@ def load_env_file(filepath=".env"):
             os.environ[key] = value
 
 
-load_env_file()
+#load_env_file()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or os.urandom(32)
@@ -732,5 +738,5 @@ def signup():
 # API CALLS
 
 
-
-app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=8000)
+if __name__ == "__main__":
+    app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true", port=8000)

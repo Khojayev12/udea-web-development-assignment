@@ -4,24 +4,46 @@ from mysql.connector import Error
 
 class DBHandler():
     def __init__(self):
+        self.cnx = None
+        self.cursor = None
+        self._user_rating_column = None
+        self._db_config = {
+            "user": os.environ.get('DB_USER'),
+            "password": os.environ.get('DB_PASSWORD'),
+            "host": os.environ.get('DB_HOST'),
+            "port": os.environ.get('DB_PORT', '3306'),
+            "database": os.environ.get('DB_NAME'),
+        }
+        if not all([self._db_config["user"], self._db_config["host"], self._db_config["database"], self._db_config["password"]]):
+            raise RuntimeError("Database configuration missing. Please set DB_USER, DB_PASSWORD, DB_HOST, DB_NAME.")
+        self._connect()
+
+    def _connect(self):
+        """Establish a DB connection and cursor."""
         try:
-            self.cnx = mysql.connector.connect(
-                user=os.environ.get('DB_USER', 'khoja12'),
-                password=os.environ.get('DB_PASSWORD', ''),
-                host=os.environ.get('DB_HOST', 'khoja12.mysql.pythonanywhere-services.com'),
-                port=os.environ.get('DB_PORT', '3306'),
-                database=os.environ.get('DB_NAME', 'khoja12$default')
-            )
+            self.cnx = mysql.connector.connect(**self._db_config)
             self.cursor = self.cnx.cursor()
-            print("DBhandler initiated")
             self._user_rating_column = None
+            print("DBhandler initiated")
         except Error as e:
-            print("Failed to connect!", e)
+            self.cnx = None
+            self.cursor = None
+            raise RuntimeError(f"Database connection failed: {e}")
+
+    def _ensure_cursor(self):
+        """Ensure cursor/connection is alive or reconnect."""
+        if self.cnx is None or self.cursor is None or not self.cnx.is_connected():
+            self._connect()
+
     def closer_connection(self):
-        self.cnx.close()
-        print("Database connection closed!")
+        if self.cnx:
+            self.cnx.close()
+            self.cnx = None
+            self.cursor = None
+            print("Database connection closed!")
     def check_user_login(self, login):
         query = "select user_id, password from Users where email=%s"
+        self._ensure_cursor()
         self.cursor.execute(query, (login,))
         result = self.cursor.fetchone()
         print("result: ", result)
@@ -33,6 +55,7 @@ class DBHandler():
             "values(%s, %s, %s, NULL, NULL, NULL, DATE_ADD(NOW(), INTERVAL 5 HOUR), 'user')"
         )
         try:
+            self._ensure_cursor()
             self.cursor.execute(query, (login, password, name))
             self.cnx.commit()
             return True
@@ -165,6 +188,7 @@ class DBHandler():
 
     def fetch_recent_recipes(self, limit=4, offset=0):
         """Return a list of the most recent recipes with id, title, and cover image."""
+        self._ensure_cursor()
         query = """
             select recipe_id, title, cover_img_path
             from Recipes
@@ -188,6 +212,7 @@ class DBHandler():
 
     def fetch_popular_recipes(self, limit=3):
         """Return top recipes by rating (fallback to date order if rating null)."""
+        self._ensure_cursor()
         query = """
             select recipe_id, title, cover_img_path
             from Recipes
