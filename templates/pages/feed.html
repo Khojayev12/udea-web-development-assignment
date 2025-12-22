@@ -57,8 +57,8 @@
         set_filter_state(should_open)
     })
 </script>
-<div class="feed-page">
-    <div class="feed-filters-pane filters-open" id="filter-section">
+<section class="feed-page">
+    <aside class="feed-filters-pane filters-open" id="filter-section">
         <div class="feed-filter-header">
             <h2 class="feed-filter-title">Filters</h2>
             <button class="feed-filter-subsection-btn feed-filter-toggle-btn dropdown-btn-open" id="feed-filter-toggle-btn"
@@ -130,8 +130,8 @@
 
             <button class="feed-reset-btn" type="submit">Apply Filters</button>
         </form>
-    </div>
-    <div class="feed-list-page">
+    </aside>
+    <section class="feed-list-page">
         <div class="feed-pagination feed-pagination-top">
             {% if prev_page %}
                 <a class="feed-page-btn" href="{{ url_for('feed', page=prev_page, category=active_category, difficulty=active_difficulty, max_time=active_max_time) }}">&larr; Prev</a>
@@ -210,8 +210,8 @@
                 <span class="feed-page-btn disabled">Next &rarr;</span>
             {% endif %}
         </div>
-    </div>
+    </section>
 
 
-</div>
+</section>
 {% endblock %}

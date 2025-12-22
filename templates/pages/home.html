@@ -32,7 +32,7 @@
         ADD RECIPE
       </a>
     </div>
-    <div class="list-section-1">
+    <section class="list-section-1">
       <h2 class="list-section-title"><a href="{{ url_for('feed') }}">New Recipes</a></h2>
       <div class="list-section-1-item-group">
         {% if recent_recipes and recent_recipes|length > 0 %}
@@ -51,9 +51,9 @@
           {% endfor %}
         {% endif %}
       </div>
-    </div>
+    </section>
 
-    <div class="list-section-1">
+    <section class="list-section-1">
       <h2 class="list-section-title"><a href="{{ url_for('feed') }}">MORE RECIPES</a></h2>
       <div class="list-section-1-item-group">
         {% if more_recipes and more_recipes|length > 0 %}
@@ -72,9 +72,9 @@
           {% endfor %}
         {% endif %}
       </div>
-    </div>
+    </section>
 
-    <div class="list-section-1">
+    <section class="list-section-1">
       <h2 class="list-section-title"><a href="{{ url_for('feed') }}">COLLECTIONS</a></h2>
       <div class="list-section-1-item-group">
         {% for collection in difficulty_collections or [] %}
@@ -91,9 +91,9 @@
           </a>
         {% endfor %}
       </div>
-    </div>
+    </section>
 
-    <div class="populars-section">
+    <section class="populars-section">
         <div class="populars-sec-left">
             <p class="populars-left-title">The Most Popular Recipes on CookBook Right Now</p>
             <a class="populars-left-seeall" href="{{ url_for('feed') }}">View Complete Guide > </a>
@@ -116,6 +116,6 @@
                 {% endfor %}
             {% endif %}
         </div>
-    </div>
+    </section>
 
 {% endblock %}
