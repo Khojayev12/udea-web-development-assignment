@@ -66,7 +66,7 @@
             </div>
         </div>
         <div class="recipe-hero-right">
-            <img src="{{ image_src }}" alt="{{ recipe.title }} image" class="recipe-hero-image lazy-image" data-lazy-image loading="lazy">
+            <img src="{{ image_src }}" alt="{{ recipe.title }} image" class="recipe-hero-image lazy-image" data-lazy-image loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='media/registration.png') }}';">
         </div>
     </section>
 
@@ -160,13 +160,14 @@
                 {% for rec in recommendations %}
                     <a class="recipe-card" href="{{ url_for('recipe', recipe_id=rec.id) }}">
                         <div class="recipe-card__image-wrapper">
-                            <img
-                            class="recipe-card__image lazy-image"
-                            data-lazy-image
-                            loading="lazy"
-                            src="{{ rec.image or card_image }}"
-                            alt="{{ rec.title }}"
-                            >
+                                <img
+                                    class="recipe-card__image lazy-image"
+                                    data-lazy-image
+                                    loading="lazy"
+                                    src="{{ rec.image or card_image }}"
+                                    alt="{{ rec.title }}"
+                                    onerror="this.onerror=null;this.src='{{ card_image }}';"
+                                >
                             <button
                                 class="recipe-card__favorite {% if rec.is_favorited %}is-liked{% endif %}"
                                 type="button"

@@ -58,6 +58,7 @@
                             class="recipe-card__image"
                             src="{{ recipe.image or card_image }}"
                             alt="{{ recipe.title }}"
+                            onerror="this.onerror=null;this.src='{{ card_image }}';"
                         >
                         <button
                             class="recipe-card__favorite {% if recipe.is_favorited %}is-liked{% endif %}"

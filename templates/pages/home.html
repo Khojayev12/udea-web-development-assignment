@@ -40,7 +40,7 @@
         {% if recent_recipes and recent_recipes|length > 0 %}
           {% for recipe in recent_recipes %}
             <a href="{{ url_for('recipe', recipe_id=recipe.id) }}" class="list-section-1-item">
-              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="list-item-img" />
+              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="list-item-img" onerror="this.onerror=null;this.src='{{ registration_image }}';" />
               <p class="list-item-name">{{ recipe.title }}</p>
             </a>
           {% endfor %}
@@ -61,7 +61,7 @@
         {% if more_recipes and more_recipes|length > 0 %}
           {% for recipe in more_recipes %}
             <a href="{{ url_for('recipe', recipe_id=recipe.id) }}" class="retsept-list-item">
-              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="retsept-list-img" />
+              <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="retsept-list-img" onerror="this.onerror=null;this.src='{{ registration_image }}';" />
               <p class="retsept-list-name">{{ recipe.title }}</p>
             </a>
           {% endfor %}
@@ -88,6 +88,7 @@
               src="{{ collection.image or registration_image }}"
               alt="{{ collection.title }}"
               class="collection-list-img"
+              onerror="this.onerror=null;this.src='{{ registration_image }}';"
             />
             <p class="collection-list-name">{{ collection.title }}</p>
           </a>
@@ -105,7 +106,7 @@
             {% if popular_recipes and popular_recipes|length > 0 %}
                 {% for recipe in popular_recipes %}
                     <a class="populars-sec-right-item" href="{{ url_for('recipe', recipe_id=recipe.id) }}">
-                        <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="populars-right-item-img">
+                        <img src="{{ recipe.image or registration_image }}" alt="{{ recipe.title }}" class="populars-right-item-img" onerror="this.onerror=null;this.src='{{ registration_image }}';">
                         <p class="populars-sec-right-title">{{ recipe.title }}</p>
                     </a>
                 {% endfor %}

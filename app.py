@@ -183,6 +183,30 @@ def build_difficulty_collections():
     return collections
 
 
+def resolve_image_path(path: str):
+    """Return a verified image path, falling back to default if missing on disk."""
+    default_path = url_for('static', filename='media/registration.png')
+    if not path:
+        return default_path
+    candidate = os.path.join(app.root_path, path.lstrip("/"))
+    if os.path.exists(candidate):
+        return path
+    return default_path
+
+
+def apply_image_fallbacks(items: list, key: str = "image"):
+    """Ensure each dict in items has an existing image path or default."""
+    default_path = url_for('static', filename='media/registration.png')
+    for item in items or []:
+        val = item.get(key)
+        if not val:
+            item[key] = default_path
+            continue
+        candidate = os.path.join(app.root_path, str(val).lstrip("/"))
+        if not os.path.exists(candidate):
+            item[key] = default_path
+
+
 # adding comment, making change
 @app.route('/signout', methods=['GET', 'POST'])
 def signout():
@@ -205,6 +229,9 @@ def index():
     recent_recipes = mydb.fetch_recent_recipes()
     more_recipes = mydb.fetch_recent_recipes(offset=4)
     popular_recipes = mydb.fetch_popular_recipes()
+    apply_image_fallbacks(recent_recipes)
+    apply_image_fallbacks(more_recipes)
+    apply_image_fallbacks(popular_recipes)
     difficulty_collections = build_difficulty_collections()
     return render_template(
         'pages/home.html',
@@ -227,6 +254,7 @@ def api_search():
     limit = max(1, min(limit, 15))
 
     results = mydb.search_recipes(query, limit=limit, offset=0)
+    apply_image_fallbacks(results)
     return jsonify([
         {
             "id": r.get("id"),
@@ -252,6 +280,8 @@ def search():
     total_pages = max(1, (total_count + per_page - 1) // per_page) if query else 1
     prev_page = page - 1 if page > 1 and page <= total_pages else None
     next_page = page + 1 if page < total_pages else None
+
+    apply_image_fallbacks(recipes)
 
     return render_template(
         'pages/search.html',
@@ -295,6 +325,8 @@ def feed():
     prev_page = page - 1 if page > 1 else None
     next_page = page + 1 if page < total_pages else None
 
+    apply_image_fallbacks(recipes)
+
     return render_template(
         'pages/feed.html',
         recipes=recipes,
@@ -336,6 +368,15 @@ def recipe(recipe_id: int):
         abort(404)
 
     image_path = recipe_row.get("cover_img_path")
+    default_image = url_for('static', filename='media/registration.png')
+    if image_path:
+        fs_path = image_path.lstrip("/")
+        candidate = os.path.join(app.root_path, fs_path)
+        print("candidate: ", candidate, "!!!!!!!!!!!!   !!! !!!!    !!!!    !!!!")
+        if not os.path.exists(candidate):
+            image_path = default_image
+    else:
+        image_path = default_image
     rating_value = float(recipe_row.get("rating") or 0)
     ingredients = recipe_row.get("ingredients", [])
     tags = recipe_row.get("tags", [])
@@ -419,6 +460,7 @@ def recipe(recipe_id: int):
     }
 
     recommendations = mydb.fetch_recommended_recipes(recipe_id, limit=5)
+    apply_image_fallbacks(recommendations)
 
     return render_template('pages/recipe.html', recipe=recipe_data, recommendations=recommendations)
 
@@ -431,6 +473,9 @@ def home():
     recent_recipes = mydb.fetch_recent_recipes()
     more_recipes = mydb.fetch_recent_recipes(offset=4)
     popular_recipes = mydb.fetch_popular_recipes()
+    apply_image_fallbacks(recent_recipes)
+    apply_image_fallbacks(more_recipes)
+    apply_image_fallbacks(popular_recipes)
     difficulty_collections = build_difficulty_collections()
     return render_template(
         'pages/home.html',
@@ -469,6 +514,8 @@ def profile_view(user_id: int):
     stats = mydb.fetch_user_stats(user_id)
     recipes = mydb.fetch_user_recipes(user_id, limit=4, viewer_id=session_user)
     favorites = mydb.fetch_user_liked_recipes(user_id, limit=4) if is_owner else []
+    apply_image_fallbacks(recipes)
+    apply_image_fallbacks(favorites)
     is_following = False
     if session_user and not is_owner:
         is_following = mydb.is_following_user(user_id, session_user)
@@ -609,12 +656,12 @@ def add():
             ext, error_message = validate_image_file(photo_file, allowed_ext)
             if error_message:
                 return render_template('pages/add.html', error=error_message)
-            upload_dir = os.path.join(app.root_path, "static", "media", "recipes")
+            upload_dir = os.path.join(app.root_path, "static", "img", "recipes")
             os.makedirs(upload_dir, exist_ok=True)
             final_name = f"{uuid.uuid4().hex}.{ext}"
             file_path = os.path.join(upload_dir, final_name)
             photo_file.save(file_path)
-            cover_img_path = f"/static/media/recipes/{final_name}"
+            cover_img_path = f"/static/img/recipes/{final_name}"
 
         recipe_id = mydb.create_recipe(
             title=title,
