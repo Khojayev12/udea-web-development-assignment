@@ -82,6 +82,7 @@ def get_current_user():
 
 
 def generate_csrf_token():
+    """Return a per-session CSRF token string, creating it if missing."""
     token = session.get("csrf_token")
     if not token:
         token = uuid.uuid4().hex
@@ -91,6 +92,7 @@ def generate_csrf_token():
 
 @app.before_request
 def csrf_protect():
+    """Guard all POST requests by validating CSRF token from form/header/json."""
     if request.method == "POST":
         session_token = session.get("csrf_token")
         form_token = request.form.get("csrf_token")
@@ -104,6 +106,7 @@ def csrf_protect():
 
 @app.context_processor
 def inject_csrf():
+    """Inject csrf_token callable into templates for hidden inputs."""
     return {"csrf_token": generate_csrf_token}
 
 
@@ -183,12 +186,14 @@ def build_difficulty_collections():
 # adding comment, making change
 @app.route('/signout', methods=['GET', 'POST'])
 def signout():
+    """Clear session and redirect to index; used for logout."""
     session.clear()
     return redirect(url_for('index'))
 
 
 @app.errorhandler(RequestEntityTooLarge)
 def handle_large_file(e):
+    """Handle oversized uploads with 413 response."""
     return "File too large. Maximum upload size is 10MB.", 413
 
 def test_git():
@@ -196,6 +201,7 @@ def test_git():
 
 @app.route('/')
 def index():
+    """Render home page with recent, more, popular recipes and difficulty collections."""
     recent_recipes = mydb.fetch_recent_recipes()
     more_recipes = mydb.fetch_recent_recipes(offset=4)
     popular_recipes = mydb.fetch_popular_recipes()
@@ -233,6 +239,7 @@ def api_search():
 
 @app.route('/search')
 def search():
+    """Render full search results with pagination for the given query."""
     user_id, _ = get_current_user()
     query = (request.args.get('q') or "").strip()
     page_raw = request.args.get('page', '1')
@@ -260,6 +267,7 @@ def search():
 
 @app.route('/feed')
 def feed():
+    """Render feed listing with filters for category, difficulty, and max time."""
     user_id, _ = get_current_user()
     category = request.args.get('category') or None
     difficulty = request.args.get('difficulty') or None
@@ -317,6 +325,7 @@ def api_favorite_recipe(recipe_id: int):
 
 @app.route('/recipe/<int:recipe_id>', methods=['GET', 'POST'])
 def recipe(recipe_id: int):
+    """Render recipe detail and handle favorites/reviews submissions."""
     session_user, session_role = get_current_user()
     is_admin = session_role == 'admin'
 
@@ -416,6 +425,7 @@ def recipe(recipe_id: int):
 
 @app.route('/home', methods=['GET', 'POST'])
 def home():
+    """Show home page for logged-in users; otherwise redirects to login."""
     if 'user' not in session:
         return redirect(url_for('login'))
     recent_recipes = mydb.fetch_recent_recipes()
@@ -432,12 +442,14 @@ def home():
 
 @app.route('/profile')
 def profile():
+    """Redirect to the current user's profile page."""
     if 'user' not in session:
         return redirect(url_for('login'))
     return redirect(url_for('profile_view', user_id=session['user']))
 
 @app.route('/profile/<int:user_id>', methods=['GET', 'POST'])
 def profile_view(user_id: int):
+    """Display a user's profile, recipes, and follower actions."""
     profile_data = mydb.fetch_user_basic(user_id)
     if not profile_data:
         abort(404)
@@ -473,6 +485,7 @@ def profile_view(user_id: int):
 
 @app.route('/editprofile', methods=['GET', 'POST'])
 def edit_profile():
+    """Let the signed-in user update profile fields, password, and avatar."""
     session_user, _ = get_current_user()
     if not session_user:
         return redirect(url_for('login'))
@@ -545,6 +558,7 @@ def edit_profile():
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
+    """Create a new recipe submission; stores ingredients, tags, nutrition."""
     session_user, session_role = get_current_user()
     if not session_user:
         return redirect(url_for('login'))
@@ -627,6 +641,7 @@ def add():
 
 @app.route('/admin/recipes', methods=['GET', 'POST'])
 def admin_recipes():
+    """Admin interface for approving/deleting recipes and moderating ratings."""
     user_id, role = get_current_user()
     print("USER ID AND ROLE !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     print(user_id, role)
@@ -676,6 +691,7 @@ def admin_recipes():
 
 @app.route('/notifications', methods=['GET', 'POST'])
 def notifications():
+    """Render notifications page for current user (requires login)."""
     if 'user' not in session:
         return redirect(url_for('login'))
     user_id, _ = get_current_user()
@@ -685,6 +701,7 @@ def notifications():
 
 @app.route('/notifications/mark-read', methods=['POST'])
 def notifications_mark_read():
+    """AJAX endpoint to mark a single notification as read."""
     user_id, _ = get_current_user()
     if not user_id:
         return jsonify({"redirect": url_for('login')}), 401
@@ -699,6 +716,7 @@ def notifications_mark_read():
 
 @app.route('/notifications/mark-all', methods=['POST'])
 def notifications_mark_all():
+    """AJAX endpoint to mark all notifications as read."""
     user_id, _ = get_current_user()
     if not user_id:
         return jsonify({"redirect": url_for('login')}), 401
@@ -709,6 +727,7 @@ def notifications_mark_all():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Display login form; on POST authenticate and start a session."""
     if request.method == 'POST':
         email = request.form.get('email', '')
         password = request.form.get('password', '')
@@ -728,6 +747,7 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """Display signup form; on POST create a user and redirect to login."""
     if request.method == 'POST':
         name = request.form.get('name', '')
         email = request.form.get('email', '')

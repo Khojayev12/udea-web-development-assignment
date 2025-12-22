@@ -3,7 +3,9 @@ import mysql.connector
 from mysql.connector import Error
 
 class DBHandler():
+    """Database access layer for user, recipe, rating, and feed operations."""
     def __init__(self):
+        """Initialize handler with config from env and open a connection."""
         self.cnx = None
         self.cursor = None
         self._user_rating_column = None
@@ -36,12 +38,14 @@ class DBHandler():
             self._connect()
 
     def closer_connection(self):
+        """Close the DB connection and clear cursor references."""
         if self.cnx:
             self.cnx.close()
             self.cnx = None
             self.cursor = None
             print("Database connection closed!")
     def check_user_login(self, login):
+        """Lookup user credentials by email; returns (user_id, password hash) tuple or None."""
         query = "select user_id, password from Users where email=%s"
         self._ensure_cursor()
         self.cursor.execute(query, (login,))
@@ -50,6 +54,7 @@ class DBHandler():
         return result
     
     def register_new_user(self, name, login, password):
+        """Create a new user; inputs are strings, returns bool success."""
         query = (
             "insert into Users(email, password, name, surname, about_me, profile_img_path, date_registered, role) "
             "values(%s, %s, %s, NULL, NULL, NULL, DATE_ADD(NOW(), INTERVAL 5 HOUR), 'user')"
@@ -892,14 +897,18 @@ class DBHandler():
         like_pattern = f"%{query.strip()}%"
         sql = """
             select r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
-            {liked_select}
+                   {liked_select}
             from Recipes r
             left join Ingredients i on i.recipe_id = r.recipe_id
+            left join Tags t on t.recipe_id = r.recipe_id
+            left join Users u on u.user_id = r.author_id
             where r.status = 'active'
               and (
                   r.title like %s
                   or r.category like %s
                   or i.ingredient like %s
+                  or t.tag_name like %s
+                  or concat_ws(' ', u.name, u.surname) like %s
               )
             group by r.recipe_id, r.title, r.cover_img_path, r.rating, r.prepare_time
             order by r.date_posted desc
@@ -911,7 +920,7 @@ class DBHandler():
             params = []
             if user_id:
                 params.append(user_id)
-            params.extend([like_pattern, like_pattern, like_pattern, limit, offset])
+            params.extend([like_pattern, like_pattern, like_pattern, like_pattern, like_pattern, limit, offset])
             self.cursor.execute(final_sql, tuple(params))
             rows = self.cursor.fetchall()
             return [
@@ -938,15 +947,19 @@ class DBHandler():
             select count(distinct r.recipe_id)
             from Recipes r
             left join Ingredients i on i.recipe_id = r.recipe_id
+            left join Tags t on t.recipe_id = r.recipe_id
+            left join Users u on u.user_id = r.author_id
             where r.status = 'active'
               and (
                   r.title like %s
                   or r.category like %s
                   or i.ingredient like %s
+                  or t.tag_name like %s
+                  or concat_ws(' ', u.name, u.surname) like %s
               )
         """
         try:
-            self.cursor.execute(sql, (like_pattern, like_pattern, like_pattern))
+            self.cursor.execute(sql, (like_pattern, like_pattern, like_pattern, like_pattern, like_pattern))
             row = self.cursor.fetchone()
             return row[0] if row else 0
         except Error as err:

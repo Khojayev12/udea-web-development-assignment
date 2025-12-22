@@ -13,11 +13,14 @@
     <div class="reg-main-page">
         <div class="reg-main-left">
             <form action="{{ url_for('signup') }}" class="reg-login-form" method="post">
-                <label for="form" class="reg-main-label">SIGN UP</label>
+                <h1 class="reg-main-label">SIGN UP</h1>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="text" name="name" placeholder="Name" class="reg-input" value="{{ request.form.get('name', '') }}" required>
-                <input type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
-                <input type="password" name="password" placeholder="Password" class="reg-input" required>
+                <label class="sr-only" for="signup-name">Name</label>
+                <input id="signup-name" type="text" name="name" placeholder="Name" class="reg-input" value="{{ request.form.get('name', '') }}" required>
+                <label class="sr-only" for="signup-email">Email</label>
+                <input id="signup-email" type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
+                <label class="sr-only" for="signup-password">Password</label>
+                <input id="signup-password" type="password" name="password" placeholder="Password" class="reg-input" required>
                 <button class="reg-submit-btn">SUBMIT</button>
                 {% if error %}
                 <p class="reg-error">{{ error }}</p>

@@ -13,10 +13,12 @@
     <div class="reg-main-page">
         <div class="reg-main-left">
             <form action="{{ url_for('login') }}" class="reg-login-form" method="post">
-                <label for="form" class="reg-main-label">LOGIN</label>
+                <h1 class="reg-main-label">LOGIN</h1>
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
-                <input type="password" name="password" placeholder="Password" class="reg-input" required>
+                <label class="sr-only" for="login-email">Email</label>
+                <input id="login-email" type="email" name="email" placeholder="Email" class="reg-input" value="{{ request.form.get('email', '') }}" required>
+                <label class="sr-only" for="login-password">Password</label>
+                <input id="login-password" type="password" name="password" placeholder="Password" class="reg-input" required>
                 <button class="reg-submit-btn">SUBMIT</button>
                 {% if error %}
                 <p class="reg-error">{{ error }}</p>
